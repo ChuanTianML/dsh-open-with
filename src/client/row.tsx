@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   IconChevronRightOutline14,
-  IconCodeOutline16,
+  IconRightUpOutline16,
   Menu,
   type MenuItem,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -21,6 +21,8 @@ export interface OpenWithInjected {
   listEditors: () => Promise<EditorCatalog>
   /** Open a registered Workspace in one catalog editor. */
   open: (workspaceId: string, editorId: string) => Promise<void>
+  /** Announce a launch failure outside the closing Workspace menu. */
+  showError: (text: string) => void
 }
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -44,6 +46,10 @@ export type OpenWithRowProps =
   & GlobalStandardProps
   & PropsLocale<'open-with'>
   & OpenWithInjected
+  & {
+    /** Keep a host-owned hover menu alive while its legacy child portal is active. */
+    keepParentOpen?: () => void
+  }
 
 /** Minimal presentation props shared by the native slot and legacy adapter. */
 export interface OpenWithMenuRowProps extends OpenWithInjected {
@@ -53,6 +59,8 @@ export interface OpenWithMenuRowProps extends OpenWithInjected {
   t: OpenWithRowProps['t']
   /** Launch the primary action on pointerdown when the legacy menu unmounts before click. */
   eagerPointerActivation?: boolean
+  /** Keep a host-owned hover menu alive while its legacy child portal is active. */
+  keepParentOpen?: () => void
 }
 
 function readPreferredEditor(): string | undefined {
@@ -88,8 +96,10 @@ export function OpenWithMenuRow({
   onClose,
   listEditors,
   open,
+  showError,
   t,
   eagerPointerActivation = false,
+  keepParentOpen,
 }: OpenWithMenuRowProps) {
   const [catalog, setCatalog] = useState<EditorCatalog | undefined>()
   const [loadError, setLoadError] = useState(false)
@@ -114,7 +124,12 @@ export function OpenWithMenuRow({
     id: editor.id,
     label: editor.available
       ? editor.label
-      : <span title={editor.hint}>{editor.label} — {t('menu.unavailable')}</span>,
+      : (
+          <span className="dsh-open-with-label-stack">
+            <span>{editor.label} — {t('menu.unavailable')}</span>
+            {editor.hint !== undefined && <span className="dsh-open-with-hint">{editor.hint}</span>}
+          </span>
+        ),
     disabled: !editor.available,
   })) ?? [], [catalog, t])
 
@@ -123,20 +138,27 @@ export function OpenWithMenuRow({
   const launch = (editor: EditorView): void => {
     if (!editor.available || activated.current) return
     activated.current = true
-    setChooserOpen(false)
-    setPreferredId(editor.id)
-    writePreferredEditor(editor.id)
-    onClose()
-    open(workspaceId, editor.id).catch((error: unknown) => {
-      console.error('[dsh-open-with] open failed:', error)
-    })
+    void open(workspaceId, editor.id).then(
+      () => {
+        setChooserOpen(false)
+        setPreferredId(editor.id)
+        writePreferredEditor(editor.id)
+        onClose()
+      },
+      (error: unknown) => {
+        activated.current = false
+        const message = error instanceof Error ? error.message : String(error)
+        showError(fmt(t('menu.openFailed'), { message }))
+        console.error('[dsh-open-with] open failed:', error)
+      },
+    )
   }
 
   if (catalog === undefined) {
     const text = loadError ? t('menu.catalogFailed') : t('menu.loading')
     return (
       <button type="button" role="menuitem" className="dsh-open-with-row" disabled>
-        <span className="dsh-open-with-icon"><IconCodeOutline16 /></span>
+        <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
         <span className="dsh-open-with-label">{text}</span>
       </button>
     )
@@ -148,7 +170,7 @@ export function OpenWithMenuRow({
   if (primaryEditor === undefined) {
     return (
       <button type="button" role="menuitem" className="dsh-open-with-row" disabled>
-        <span className="dsh-open-with-icon"><IconCodeOutline16 /></span>
+        <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
         <span className="dsh-open-with-label">{t('menu.catalogFailed')}</span>
       </button>
     )
@@ -161,7 +183,13 @@ export function OpenWithMenuRow({
         type="button"
         role="menuitem"
         className="dsh-open-with-primary"
-        aria-label={fmt(t('menu.openInEditor.aria'), { name: label, editor: primaryEditor.label })}
+        aria-label={primaryEditor.available
+          ? fmt(t('menu.openInEditor.aria'), { name: label, editor: primaryEditor.label })
+          : fmt(t('menu.openUnavailable.aria'), {
+              name: label,
+              editor: primaryEditor.label,
+              hint: primaryEditor.hint ?? t('menu.unavailable'),
+            })}
         disabled={!primaryEditor.available}
         title={primaryEditor.hint}
         onClick={() => { launch(primaryEditor) }}
@@ -169,9 +197,15 @@ export function OpenWithMenuRow({
           if (eagerPointerActivation && event.button === 0) launch(primaryEditor)
         }}
       >
-        <span className="dsh-open-with-icon"><IconCodeOutline16 /></span>
-        <span className="dsh-open-with-label">
-          {fmt(t('menu.openInEditor'), { editor: primaryEditor.label })}
+        <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
+        <span className="dsh-open-with-label dsh-open-with-label-stack">
+          <span>
+            {fmt(t('menu.openInEditor'), { editor: primaryEditor.label })}
+            {!primaryEditor.available && ` — ${t('menu.unavailable')}`}
+          </span>
+          {!primaryEditor.available && primaryEditor.hint !== undefined && (
+            <span className="dsh-open-with-hint">{primaryEditor.hint}</span>
+          )}
         </span>
       </button>
       {catalog.editors.length > 1 && (
@@ -194,21 +228,28 @@ export function OpenWithMenuRow({
 
   if (catalog.editors.length === 1) return primary
   return (
-    <Menu
-      open={chooserOpen}
-      anchor={primary}
-      items={menuItems}
-      selectedId={preferred?.id}
-      onSelect={(editorId) => {
-        const editor = catalog.editors.find(item => item.id === editorId)
-        if (editor !== undefined) launch(editor)
-      }}
-      onClose={() => { setChooserOpen(false) }}
-      side="right"
-      compact
-      className="dsh-open-with-menu"
-      footer={availableCount === 0 ? [{ id: 'none', label: t('menu.catalogFailed'), disabled: true }] : undefined}
-    />
+    <span
+      className="dsh-open-with-event-bridge"
+      onPointerOver={keepParentOpen}
+      onPointerDown={chooserOpen ? (event) => { event.stopPropagation() } : undefined}
+    >
+      <Menu
+        open={chooserOpen}
+        anchor={primary}
+        items={menuItems}
+        selectedId={preferred?.id}
+        onSelect={(editorId) => {
+          const editor = catalog.editors.find(item => item.id === editorId)
+          if (editor !== undefined) launch(editor)
+        }}
+        onClose={() => { setChooserOpen(false) }}
+        side="right"
+        portal
+        compact
+        className="dsh-open-with-menu"
+        footer={availableCount === 0 ? [{ id: 'none', label: t('menu.catalogFailed'), disabled: true }] : undefined}
+      />
+    </span>
   )
 }
 

@@ -3,9 +3,11 @@
 export declare const zh: {
     'menu.openInEditor': string;
     'menu.openInEditor.aria': string;
+    'menu.openUnavailable.aria': string;
     'menu.openWith.aria': string;
     'menu.loading': string;
     'menu.catalogFailed': string;
+    'menu.openFailed': string;
     'menu.unavailable': string;
 };
 /** The `open-with` namespace key union. */
@@ -14,9 +16,11 @@ export type OpenWithKey = keyof typeof zh;
 export declare const en: {
     'menu.openInEditor': string;
     'menu.openInEditor.aria': string;
+    'menu.openUnavailable.aria': string;
     'menu.openWith.aria': string;
     'menu.loading': string;
     'menu.catalogFailed': string;
+    'menu.openFailed': string;
     'menu.unavailable': string;
 };
 /** Locale namespace id registered under ctx.locale. */

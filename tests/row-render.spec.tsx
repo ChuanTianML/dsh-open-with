@@ -33,6 +33,13 @@ const unavailableCatalog: EditorCatalog = {
   defaultEditorId: 'vscode',
 }
 
+const singleUnavailableCatalog: EditorCatalog = {
+  editors: [
+    { id: 'fleet', label: 'Fleet', available: false, hint: 'Executable "fleet" was not found' },
+  ],
+  defaultEditorId: 'fleet',
+}
+
 const t = ((key: string, params?: Record<string, string>) => {
   const template = (zh as Record<string, string>)[key] ?? key
   return params === undefined ? template : fmt(template, params)
@@ -49,6 +56,7 @@ function props(overrides: Partial<OpenWithRowProps> = {}): OpenWithRowProps {
     onClose: vi.fn(),
     listEditors: vi.fn(async () => singleCatalog),
     open: vi.fn(async () => {}),
+    showError: vi.fn(),
     t,
     useSessions,
     useWorkspaces,
@@ -65,7 +73,7 @@ describe('OpenWithRow', () => {
     expect(row.querySelector('svg')).not.toBeNull()
     fireEvent.click(row)
     expect(open).toHaveBeenCalledWith('workspace-1', 'vscode')
-    expect(renderToString(<OpenWithRow {...props()} />)).toContain('正在检测编辑器')
+    expect(renderToString(<OpenWithRow {...props()} />)).toContain('正在检测打开方式')
     expect(view).toBeTruthy()
   })
 
@@ -78,34 +86,71 @@ describe('OpenWithRow', () => {
       listEditors: vi.fn(async () => multiCatalog),
     })} />)
     await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
-    fireEvent.click(screen.getByRole('button', { name: '选择用于打开 Project 的编辑器' }))
+    fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
+    const chooserMenu = screen.getByRole('menu')
+    expect(chooserMenu.parentElement).toBe(document.body)
+    expect(first.container.contains(chooserMenu)).toBe(false)
     fireEvent.click(screen.getByRole('menuitem', { name: 'Cursor' }))
-    expect(onClose).toHaveBeenCalledOnce()
     expect(open).toHaveBeenCalledWith('workspace-1', 'cursor')
-    expect(window.localStorage.getItem('dsh-open-with.preferred-editor')).toBe('cursor')
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce()
+      expect(window.localStorage.getItem('dsh-open-with.preferred-editor')).toBe('cursor')
+    })
 
     first.unmount()
     render(<OpenWithRow {...props({ listEditors: vi.fn(async () => multiCatalog) })} />)
     await screen.findByRole('menuitem', { name: '在 Cursor 中打开 Project' })
   })
 
+  it('bridges pointer activity from the portaled chooser to a legacy host menu', async () => {
+    const keepParentOpen = vi.fn()
+    render(<OpenWithRow {...props({
+      keepParentOpen,
+      listEditors: vi.fn(async () => multiCatalog),
+    })} />)
+    await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
+    fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
+    const cursor = screen.getByRole('menuitem', { name: 'Cursor' })
+    fireEvent.pointerOver(cursor)
+    expect(keepParentOpen).toHaveBeenCalled()
+
+    const parentPointerDown = vi.fn()
+    document.addEventListener('pointerdown', parentPointerDown)
+    try {
+      fireEvent.pointerDown(cursor)
+      expect(parentPointerDown).not.toHaveBeenCalled()
+    } finally {
+      document.removeEventListener('pointerdown', parentPointerDown)
+    }
+  })
+
   it('shows missing configured editors as disabled chooser entries', async () => {
     render(<OpenWithRow {...props({ listEditors: vi.fn(async () => multiCatalog) })} />)
     await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
-    fireEvent.click(screen.getByRole('button', { name: '选择用于打开 Project 的编辑器' }))
-    const missing = screen.getByRole('menuitem', { name: 'Fleet — 不可用' })
+    fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
+    const missing = screen.getByRole('menuitem', { name: /Fleet — 不可用/u })
     expect(missing.hasAttribute('disabled')).toBe(true)
-    expect(missing.querySelector('span[title]')?.getAttribute('title')).toContain('fleet')
+    expect(missing.textContent).toContain('Executable "fleet" was not found')
   })
 
   it('keeps unavailable configured editors inspectable when none can launch', async () => {
     render(<OpenWithRow {...props({ listEditors: vi.fn(async () => unavailableCatalog) })} />)
-    const primary = await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
+    const primary = await screen.findByRole('menuitem', { name: /Visual Studio Code 无法用于打开 Project/u })
     expect(primary.hasAttribute('disabled')).toBe(true)
-    expect(primary.getAttribute('title')).toContain('code')
+    expect(primary.textContent).toContain('不可用')
+    expect(primary.textContent).toContain('Executable "code" was not found')
 
-    fireEvent.click(screen.getByRole('button', { name: '选择用于打开 Project 的编辑器' }))
-    expect(screen.getByRole('menuitem', { name: 'Fleet — 不可用' }).hasAttribute('disabled')).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
+    expect(screen.getByRole('menuitem', { name: /Fleet — 不可用/u }).hasAttribute('disabled')).toBe(true)
+  })
+
+  it('shows the reason inline when the only configured target is unavailable', async () => {
+    render(<OpenWithRow {...props({ listEditors: vi.fn(async () => singleUnavailableCatalog) })} />)
+    const primary = await screen.findByRole('menuitem', { name: /Fleet 无法用于打开 Project/u })
+    expect(primary.hasAttribute('disabled')).toBe(true)
+    expect(primary.textContent).toContain('在 Fleet 中打开 — 不可用')
+    expect(primary.textContent).toContain('Executable "fleet" was not found')
+    expect(screen.queryByRole('button', { name: '选择打开 Project 的方式' })).toBeNull()
   })
 
   it('reports catalog and launch failures without throwing through the row', async () => {
@@ -114,7 +159,7 @@ describe('OpenWithRow', () => {
       const failed = render(<OpenWithRow {...props({
         listEditors: vi.fn(async () => { throw new Error('offline') }),
       })} />)
-      await waitFor(() => { expect(screen.getByRole('menuitem').textContent).toContain('无法加载编辑器') })
+      await waitFor(() => { expect(screen.getByRole('menuitem').textContent).toContain('无法加载打开方式') })
       expect(consoleError).toHaveBeenCalledWith(
         '[dsh-open-with] editor catalog failed:',
         expect.any(Error),
@@ -122,11 +167,16 @@ describe('OpenWithRow', () => {
       failed.unmount()
 
       const open = vi.fn(async () => { throw new Error('launch failed') })
-      render(<OpenWithRow {...props({ open })} />)
+      const onClose = vi.fn()
+      const showError = vi.fn()
+      render(<OpenWithRow {...props({ onClose, open, showError })} />)
       fireEvent.click(await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' }))
       await waitFor(() => {
         expect(consoleError).toHaveBeenCalledWith('[dsh-open-with] open failed:', expect.any(Error))
+        expect(showError).toHaveBeenCalledWith('打开失败：launch failed')
       })
+      expect(onClose).not.toHaveBeenCalled()
+      expect(window.localStorage.getItem('dsh-open-with.preferred-editor')).toBeNull()
     } finally {
       consoleError.mockRestore()
     }

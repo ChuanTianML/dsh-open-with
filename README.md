@@ -4,6 +4,12 @@ Open a registered DeepSeek Harness Workspace in an installed local editor from t
 
 English | [中文](README.zh.md)
 
+## Demo
+
+[![Choose a local editor for a DeepSeek Harness Workspace](https://github.com/ChuanTianML/dsh-open-with/blob/open-with-assets/workspace-editor-chooser.gif?raw=true)](https://github.com/ChuanTianML/dsh-open-with/blob/open-with-assets/workspace-editor-chooser.gif)
+
+Hover a Workspace, open its **…** menu, use the chevron beside the preferred editor, and choose any detected target. The recording above uses the real Harness Web UI and opens the repository in Cursor.
+
 ## What it does
 
 - The Host detects installed VS Code, Cursor, Windsurf, Zed, common JetBrains IDEs, the platform terminal, and the platform file manager where a reliable launch route exists. Operator-configured profiles can add targets or override built-ins.
@@ -32,7 +38,7 @@ PATH lookup applies on every platform. macOS and Windows also probe the standard
 Add the plugin to the Web profile:
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.1.0.tar.gz
+dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.1.1.tar.gz
 ```
 
 Restart the Web server with `SIGTERM`, wait for it to exit, and refresh the page. Never use `kill -9`; it can interrupt a Session zstd write. Confirm the installed version with:
@@ -74,6 +80,8 @@ The browser receives only editor ids, labels, availability, and resolution hints
 The plugin opens only a currently registered Workspace whose directory still exists. It never reads, writes, clones, synchronizes, or uploads Workspace files. It registers no model tool, skill, prompt, or model-visible event. The launch needs no Agent approval because it follows an explicit user click in the Workspace menu.
 
 The preferred editor is browser-local state. Different browsers can choose different defaults without changing Host configuration.
+
+The preference changes only after the Host accepts a launch. Failures leave the prior choice intact and appear as a transient browser alert. On compatibility clients, keyboard navigation temporarily reveals the otherwise hover-only Workspace action buttons.
 
 ## Development
 

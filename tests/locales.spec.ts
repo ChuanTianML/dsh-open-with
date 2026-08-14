@@ -21,5 +21,7 @@ describe('the open-with dictionaries', () => {
     expect(NS).toBe('open-with')
     expect(zh['menu.openInEditor']).toBe('在 {editor} 中打开')
     expect(en['menu.openInEditor']).toBe('Open in {editor}')
+    expect(zh['menu.openWith.aria']).toBe('选择打开 {name} 的方式')
+    expect(en['menu.openWith.aria']).toBe('Choose how to open {name}')
   })
 })

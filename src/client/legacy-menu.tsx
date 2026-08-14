@@ -22,6 +22,7 @@ export interface LegacyWorkspaceMenuOptions {
   rowT: OpenWithMenuRowProps['t']
   listEditors: OpenWithMenuRowProps['listEditors']
   open: OpenWithMenuRowProps['open']
+  showError: OpenWithMenuRowProps['showError']
 }
 
 type WorkspaceTranslate = (
@@ -38,6 +39,18 @@ interface ActiveMenu {
 }
 
 const MOUNT_ATTR = 'data-dsh-open-with-legacy'
+const KEYBOARD_ATTR = 'data-dsh-open-with-keyboard-actions'
+
+function workspaceActionGroup(button: HTMLButtonElement): HTMLElement | undefined {
+  let candidate = button.parentElement
+  let rowChild: HTMLElement | undefined
+  while (candidate !== null && candidate.getAttribute('role') !== 'treeitem') {
+    rowChild = candidate
+    if (getComputedStyle(candidate).display === 'none') return candidate
+    candidate = candidate.parentElement
+  }
+  return candidate?.getAttribute('role') === 'treeitem' ? rowChild : undefined
+}
 
 function cancelPointerLeaveClose(anchor: HTMLElement): void {
   // rc.6's portaled Menu joins trigger and list through React's synthetic
@@ -57,6 +70,63 @@ function workspaceForButton(
     t('actions.workspace.aria', { name: item.title }) === aria
   ))
   return matches.length === 1 ? matches[0] : undefined
+}
+
+/**
+ * Make Harness's hover-only Workspace action cluster keyboard reachable.
+ * Tab reveals only action groups whose aria-label resolves to one registered
+ * Workspace; the next pointer interaction restores the owner stylesheet.
+ */
+export function installWorkspaceActionKeyboardAccess(
+  workspaces: WorkspaceListSource,
+  t: WorkspaceTranslate,
+): () => void {
+  const revealed = new Map<HTMLElement, string>()
+  let keyboardMode = false
+
+  const restore = (): void => {
+    for (const [actions, display] of revealed) {
+      actions.style.display = display
+      actions.removeAttribute(KEYBOARD_ATTR)
+    }
+    revealed.clear()
+  }
+  const reveal = (): void => {
+    for (const button of document.querySelectorAll<HTMLButtonElement>('button[aria-label]')) {
+      if (workspaceForButton(button, workspaces, t) === undefined) continue
+      // Harness's Menu wraps its anchor button. The wrapper itself is visible;
+      // the owner rowActions ancestor is the element hidden by `display:none`.
+      // Walk to that hidden ancestor instead of assuming the direct parent is
+      // the action group; if CSS hover already reveals it, use the direct
+      // treeitem child so keyboard mode keeps it visible after the pointer moves.
+      const actions = workspaceActionGroup(button)
+      if (actions === undefined || revealed.has(actions)) continue
+      revealed.set(actions, actions.style.display)
+      actions.style.display = 'inline-flex'
+      actions.setAttribute(KEYBOARD_ATTR, '')
+    }
+  }
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Tab') return
+    keyboardMode = true
+    reveal()
+  }
+  const onPointerDown = (): void => {
+    if (!keyboardMode) return
+    keyboardMode = false
+    queueMicrotask(restore)
+  }
+  const observer = new MutationObserver(() => { if (keyboardMode) reveal() })
+  observer.observe(document.body, { childList: true, subtree: true })
+  document.addEventListener('keydown', onKeyDown, true)
+  document.addEventListener('pointerdown', onPointerDown, true)
+
+  return () => {
+    observer.disconnect()
+    document.removeEventListener('keydown', onKeyDown, true)
+    document.removeEventListener('pointerdown', onPointerDown, true)
+    restore()
+  }
 }
 
 function isWorkspaceMenu(menu: HTMLElement, t: WorkspaceTranslate): boolean {
@@ -113,8 +183,12 @@ export function installLegacyWorkspaceMenu(options: LegacyWorkspaceMenuOptions):
         onClose={close}
         listEditors={options.listEditors}
         open={options.open}
+        showError={options.showError}
         t={options.rowT}
         eagerPointerActivation
+        keepParentOpen={() => {
+          if (active !== undefined) cancelPointerLeaveClose(active.anchor)
+        }}
       />,
     )
   }
