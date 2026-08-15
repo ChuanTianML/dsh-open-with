@@ -4,6 +4,12 @@
 
 [English](README.md) | 中文
 
+## 演示
+
+[![为 DeepSeek Harness Workspace 选择本机编辑器](https://github.com/ChuanTianML/dsh-open-with/blob/open-with-assets/workspace-editor-chooser.gif?raw=true)](https://github.com/ChuanTianML/dsh-open-with/blob/open-with-assets/workspace-editor-chooser.gif)
+
+把鼠标移到 Workspace，打开 **…** 菜单，点击首选编辑器右侧的箭头，然后选择任一已检测目标。上面的录制使用真实 Harness Web 界面，并实际用 Cursor 打开了这个仓库。
+
 ## 功能
 
 - Host 会检测已安装的 VS Code、Cursor、Windsurf、Zed、常见 JetBrains IDE、系统终端和文件管理器；管理员配置可以新增启动目标，也可以覆盖内置项。
@@ -32,7 +38,7 @@
 把插件加入 Web profile：
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.1.0.tar.gz
+dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.1.1.tar.gz
 ```
 
 使用 `SIGTERM` 重启 Web 服务器，等待它退出后刷新页面。切勿使用 `kill -9`，否则可能中断 Session zstd 写入。使用以下命令确认安装版本：
@@ -74,6 +80,8 @@ dsh plugin --profile web list dsh-open-with --depth 0
 插件只能打开仍然存在目录的已登记 Workspace。它不会读取、写入、克隆、同步或上传 Workspace 文件，也不注册模型工具、技能、提示词或模型可见事件。启动操作来自用户在 Workspace 菜单中的明确点击，因此不需要 Agent 审批。
 
 首选编辑器保存在当前浏览器中。不同浏览器可以选择不同的默认值，而不改变 Host 配置。
+
+只有 Host 接受启动后才会更新首选项。启动失败不会改变原选择，并会通过浏览器临时提示明确告知用户。在兼容客户端中，键盘导航会临时显示原本只有悬浮时可见的 Workspace 操作按钮。
 
 ## 开发
 

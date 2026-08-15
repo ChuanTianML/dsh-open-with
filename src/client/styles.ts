@@ -2,6 +2,9 @@
 const STYLE_ID = 'dsh-open-with-styles'
 
 const css = `
+.dsh-open-with-event-bridge {
+  display: contents;
+}
 .dsh-open-with-menu {
   display: block;
   width: 100%;
@@ -79,6 +82,21 @@ const css = `
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.dsh-open-with-label-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.dsh-open-with-hint {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 17px;
+  color: var(--dsw-alias-label-tertiary);
 }
 `
 

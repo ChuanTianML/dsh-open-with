@@ -12,9 +12,10 @@ import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
 // Type-only: brings the ctx.locale Context merge.
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import { OPEN_WITH_REMOTE } from './remote.ts'
+import { createOpenWithFeedback } from './feedback.tsx'
 import { NS, en, zh } from './locales.ts'
 import { OpenWithRow, type OpenWithInjected } from './row.tsx'
-import { installLegacyWorkspaceMenu } from './legacy-menu.tsx'
+import { installLegacyWorkspaceMenu, installWorkspaceActionKeyboardAccess } from './legacy-menu.tsx'
 import { adoptStyles } from './styles.ts'
 import type { EditorCatalog } from '../types.ts'
 
@@ -48,6 +49,8 @@ interface WorkspaceRowMenuSlots {
 export function apply(ctx: ClientContext): void {
   adoptStyles()
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-open-with: dictionaries')
+  const feedback = createOpenWithFeedback(document)
+  ctx.effect(() => feedback.dispose, 'dsh-open-with: feedback')
 
   // The mounted namespace handle resolves through the service store
   // (`ctx.reflect.get`), not through `ctx.remote.openWith`: the
@@ -106,8 +109,13 @@ export function apply(ctx: ClientContext): void {
   rowMenuSlots.inject('sidebar.workspaces.row-menu', () => rowMenuSlots.register({
     name: 'sidebar.workspaces.row-menu',
     locale: NS,
-    inject: (): OpenWithInjected => ({ listEditors, open }),
+    inject: (): OpenWithInjected => ({ listEditors, open, showError: feedback.showError }),
   }, OpenWithRow))
+
+  ctx.effect(() => installWorkspaceActionKeyboardAccess(
+    ctx.workspaces.list,
+    ctx.locale.bind('workspace'),
+  ), 'dsh-open-with: keyboard workspace actions')
 
   // The latest public npm build (0.1.0-rc.6) predates the Workspace row-menu
   // slot. Keep its DOM adapter live only while that declaration is absent;
@@ -126,6 +134,7 @@ export function apply(ctx: ClientContext): void {
           rowT: ctx.locale.bind(NS),
           listEditors,
           open,
+          showError: feedback.showError,
         })
       }
     }

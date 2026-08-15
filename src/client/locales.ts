@@ -4,9 +4,11 @@
 export const zh = {
   'menu.openInEditor': '在 {editor} 中打开',
   'menu.openInEditor.aria': '在 {editor} 中打开 {name}',
-  'menu.openWith.aria': '选择用于打开 {name} 的编辑器',
-  'menu.loading': '正在检测编辑器…',
-  'menu.catalogFailed': '无法加载编辑器',
+  'menu.openUnavailable.aria': '{editor} 无法用于打开 {name}：{hint}',
+  'menu.openWith.aria': '选择打开 {name} 的方式',
+  'menu.loading': '正在检测打开方式…',
+  'menu.catalogFailed': '无法加载打开方式',
+  'menu.openFailed': '打开失败：{message}',
   'menu.unavailable': '不可用',
 } satisfies Record<string, string>
 
@@ -17,9 +19,11 @@ export type OpenWithKey = keyof typeof zh
 export const en = {
   'menu.openInEditor': 'Open in {editor}',
   'menu.openInEditor.aria': 'Open {name} in {editor}',
-  'menu.openWith.aria': 'Choose an editor for {name}',
-  'menu.loading': 'Detecting editors…',
-  'menu.catalogFailed': 'Editors unavailable',
+  'menu.openUnavailable.aria': '{editor} cannot open {name}: {hint}',
+  'menu.openWith.aria': 'Choose how to open {name}',
+  'menu.loading': 'Detecting ways to open…',
+  'menu.catalogFailed': 'Open-with targets unavailable',
+  'menu.openFailed': 'Could not open: {message}',
   'menu.unavailable': 'Unavailable',
 } satisfies Record<OpenWithKey, string>
 

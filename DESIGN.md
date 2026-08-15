@@ -40,7 +40,8 @@ There is intentionally no compatibility contract with `dsh-open-in-vscode`: this
 
 ## Failure and lifecycle rules
 
-- Catalog loading and launch failures are logged without throwing through React event handlers.
+- Catalog loading failures stay in the menu. Launch failures preserve the prior preference and appear in a persistent root-level Toast that outlives the Workspace menu.
+- On compatibility clients, pressing Tab temporarily reveals the aria-matched Workspace action cluster so the hover-only Harness affordance is keyboard reachable.
 - Browser preference storage is optional; denial does not block launch.
 - Typert, locale, slot, legacy adapter, and process listeners are registered through disposable effects.
 - A cancellation received before process spawn rejects the operation; after a detached process is accepted, DSH does not own its lifetime.

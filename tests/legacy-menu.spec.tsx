@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Menu } from '@deepseek-ai/dsh-client-ui-primitives'
-import { installLegacyWorkspaceMenu } from '../src/client/legacy-menu.tsx'
+import { installLegacyWorkspaceMenu, installWorkspaceActionKeyboardAccess } from '../src/client/legacy-menu.tsx'
 import { en } from '../src/client/locales.ts'
 import type { EditorCatalog } from '../src/types.ts'
 
@@ -23,7 +23,16 @@ const catalog: EditorCatalog = {
   defaultEditorId: 'vscode',
 }
 
+const multiCatalog: EditorCatalog = {
+  editors: [
+    { id: 'cursor', label: 'Cursor', available: true },
+    { id: 'terminal', label: 'Terminal', available: true },
+  ],
+  defaultEditorId: 'cursor',
+}
+
 const listEditors = async (): Promise<EditorCatalog> => catalog
+const showError = vi.fn()
 
 function translate<K extends string>(dict: Record<string, string>): (key: K, params?: Record<string, unknown>) => string {
   return (key, params) => {
@@ -83,6 +92,7 @@ describe('rc.6 Workspace menu compatibility', () => {
       rowT: translate(en),
       listEditors,
       open,
+      showError,
     })
     const anchor = document.createElement('button')
     anchor.setAttribute('aria-label', 'Workspace actions for dsh')
@@ -112,6 +122,7 @@ describe('rc.6 Workspace menu compatibility', () => {
       rowT: translate(en),
       listEditors,
       open: vi.fn(async () => {}),
+      showError,
     })
     const anchor = document.createElement('button')
     anchor.setAttribute('aria-label', 'Workspace actions for same')
@@ -135,6 +146,7 @@ describe('rc.6 Workspace menu compatibility', () => {
       rowT: translate(en),
       listEditors,
       open: vi.fn(async () => {}),
+      showError,
     })
     render(<LegacyWorkspaceMenu onClose={onClose} />)
     const anchor = screen.getByRole('button', { name: 'Workspace actions for dsh' })
@@ -152,5 +164,65 @@ describe('rc.6 Workspace menu compatibility', () => {
       vi.useRealTimers()
       dispose()
     }
+  })
+
+  it('keeps the rc.6 hover-closing menu open across the portaled editor chooser', async () => {
+    const onClose = vi.fn()
+    const open = vi.fn(async () => {})
+    const dispose = installLegacyWorkspaceMenu({
+      workspaces: { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-1', title: 'dsh', path: '/work/dsh' }] }) },
+      workspaceT: translate(workspaceStrings),
+      rowT: translate(en),
+      listEditors: async () => multiCatalog,
+      open,
+      showError,
+    })
+    render(<LegacyWorkspaceMenu onClose={onClose} />)
+    const anchor = screen.getByRole('button', { name: 'Workspace actions for dsh' })
+    fireEvent.click(anchor)
+    await screen.findByRole('menuitem', { name: 'Open dsh in Cursor' })
+    fireEvent.click(screen.getByRole('button', { name: 'Choose how to open dsh' }))
+    const cursor = screen.getByRole('menuitem', { name: 'Cursor' })
+
+    vi.useFakeTimers()
+    try {
+      fireEvent.pointerLeave(anchor.parentElement as HTMLElement)
+      fireEvent.pointerOver(cursor)
+      act(() => { vi.advanceTimersByTime(1_000) })
+      expect(onClose).not.toHaveBeenCalled()
+      expect(cursor.isConnected).toBe(true)
+      fireEvent.pointerDown(cursor)
+      expect(cursor.isConnected).toBe(true)
+      fireEvent.click(cursor)
+      await vi.waitFor(() => { expect(open).toHaveBeenCalledWith('workspace-1', 'cursor') })
+    } finally {
+      vi.useRealTimers()
+      dispose()
+    }
+  })
+
+  it('reveals the hover-only Workspace action group for Tab navigation and restores it for pointer use', async () => {
+    const actions = document.createElement('span')
+    actions.style.display = 'none'
+    const menuAnchorWrapper = document.createElement('span')
+    const workspaceAction = document.createElement('button')
+    workspaceAction.setAttribute('aria-label', 'Workspace actions for dsh')
+    menuAnchorWrapper.appendChild(workspaceAction)
+    actions.appendChild(menuAnchorWrapper)
+    document.body.appendChild(actions)
+    const dispose = installWorkspaceActionKeyboardAccess(
+      { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-1', title: 'dsh', path: '/work/dsh' }] }) },
+      translate(workspaceStrings),
+    )
+
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(actions.style.display).toBe('inline-flex')
+    expect(actions.hasAttribute('data-dsh-open-with-keyboard-actions')).toBe(true)
+
+    fireEvent.pointerDown(document.body)
+    await new Promise<void>(resolve => queueMicrotask(() => resolve()))
+    expect(actions.style.display).toBe('none')
+    expect(actions.hasAttribute('data-dsh-open-with-keyboard-actions')).toBe(false)
+    dispose()
   })
 })
