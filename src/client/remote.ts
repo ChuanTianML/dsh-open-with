@@ -25,10 +25,12 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
   interface TypertRemoteNamespace$6f70656e496e5673636f6465 {
     list: () => Promise<RemoteResult<EditorCatalog>>
     open: (workspaceId: string, editorId: string, signal?: AbortSignal) => Promise<RemoteResult<{ opened: true }>>
+    refresh: () => Promise<RemoteResult<EditorCatalog>>
   }
   interface TypertRemoteMap {
     'openWith/list': () => Promise<RemoteResult<EditorCatalog>>
     'openWith/open': (workspaceId: string, editorId: string, signal?: AbortSignal) => Promise<RemoteResult<{ opened: true }>>
+    'openWith/refresh': () => Promise<RemoteResult<EditorCatalog>>
   }
   interface TypertRemoteNamespaceMap {
     openWith: TypertRemoteNamespace$6f70656e496e5673636f6465

@@ -1,6 +1,6 @@
 /**
  * dsh-open-with host plugin: mounts the `openWith` Typert Remote
- * service (list available editors and open a registered Workspace) and
+ * service (list, refresh, and open registered Workspace launch targets) and
  * registers its strict Typert manifest. The client half ships in the same
  * package (`./client`); the web server serves it under
  * /plugins/dsh-open-with/client.js, and it registers the split editor
@@ -65,5 +65,6 @@ export declare const Config: z<Schemastery.ObjectS<{
  * Mount the open-in-editor service and its strict Typert manifest.
  * @param ctx - host cordis context.
  * @param config - validated plugin configuration (schema defaults applied).
+ * @returns completion after the initial editor discovery and service registration.
  */
-export declare function apply(ctx: Context, config?: Config): void;
+export declare function apply(ctx: Context, config?: Config): Promise<void>;

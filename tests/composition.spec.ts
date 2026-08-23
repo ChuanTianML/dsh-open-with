@@ -14,6 +14,8 @@ import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import * as plugin from '../src/index.ts'
 import type { OpenWithRuntime } from '../src/runtime.ts'
+import { OpenWithRuntime as Runtime } from '../src/runtime.ts'
+import type { ResolvedEditor } from '../src/types.ts'
 
 class FixtureWorkspaceRegistry extends Service {
   private readonly workspaces: ReadonlyMap<string, Workspace>
@@ -111,6 +113,12 @@ describe('dsh-open-with host composition', () => {
       namespace: 'openWith',
       method: 'list',
     })
+    expect(registry.local.get('openWith/refresh')).toMatchObject({
+      id: 'dsh-open-with#openWith/refresh',
+      service: 'openWith',
+      namespace: 'openWith',
+      method: 'refresh',
+    })
     await fiber.dispose()
     expect(registry.local.get('openWith/open')).toBeUndefined()
     expect(ctx.get('openWith')).toBeUndefined()
@@ -150,6 +158,48 @@ describe('dsh-open-with host composition', () => {
     } finally {
       await fiber.dispose()
     }
+  })
+
+  it('refresh coalesces detection and atomically replaces the allowlist', async () => {
+    const ctx = new Context()
+    new FixtureWorkspaceRegistry(ctx, [{ id: 'workspace-1', path: '/tmp' }])
+    const initial: ResolvedEditor[] = [{
+      id: 'vscode', label: 'Visual Studio Code', command: '/bin/code', args: [], available: true,
+    }]
+    const replacement: ResolvedEditor[] = [{
+      id: 'cursor', label: 'Cursor', command: '/bin/cursor', args: [], available: true,
+    }]
+    let release: ((editors: readonly ResolvedEditor[]) => void) | undefined
+    const resolveRegistry = vi.fn(() => new Promise<readonly ResolvedEditor[]>((resolve) => { release = resolve }))
+    const runtime = new Runtime(ctx, initial, 'vscode', resolveRegistry)
+
+    const first = runtime.refresh()
+    const second = runtime.refresh()
+    expect(first).toBe(second)
+    expect(resolveRegistry).toHaveBeenCalledOnce()
+    expect(runtime.list()).toMatchObject({ defaultEditorId: 'vscode' })
+
+    release?.(replacement)
+    await expect(first).resolves.toEqual({
+      editors: [{ id: 'cursor', label: 'Cursor', available: true }],
+      defaultEditorId: 'cursor',
+    })
+    expect(runtime.list()).toMatchObject({ defaultEditorId: 'cursor' })
+    await expect(runtime.open('workspace-1', 'vscode')).rejects.toThrow(/unknown editor/u)
+  })
+
+  it('preserves the last usable allowlist when refresh fails', async () => {
+    const ctx = new Context()
+    new FixtureWorkspaceRegistry(ctx, [{ id: 'workspace-1', path: '/tmp' }])
+    const initial: ResolvedEditor[] = [{
+      id: 'vscode', label: 'Visual Studio Code', command: '/bin/code', args: [], available: true,
+    }]
+    const runtime = new Runtime(ctx, initial, 'vscode', async () => { throw new Error('scan failed') })
+    await expect(runtime.refresh()).rejects.toThrow(/scan failed/u)
+    expect(runtime.list()).toEqual({
+      editors: [{ id: 'vscode', label: 'Visual Studio Code', available: true }],
+      defaultEditorId: 'vscode',
+    })
   })
 
   it('open rejects unknown workspaces, missing directories, and unknown editors', async () => {

@@ -13,7 +13,8 @@ export interface LegacyWorkspaceMenuOptions {
     workspaces: WorkspaceListSource;
     workspaceT: WorkspaceTranslate;
     rowT: OpenWithMenuRowProps['t'];
-    listEditors: OpenWithMenuRowProps['listEditors'];
+    catalog: OpenWithMenuRowProps['catalog'];
+    preference: OpenWithMenuRowProps['preference'];
     open: OpenWithMenuRowProps['open'];
     showError: OpenWithMenuRowProps['showError'];
 }

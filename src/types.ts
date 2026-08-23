@@ -22,6 +22,16 @@ export interface ResolvedConfig {
   defaultEditor: string
 }
 
+/** One Host-discovered launch route attached to a built-in editor id. */
+export interface DiscoveredEditorLaunch {
+  /** Built-in editor id that owns this launch route. */
+  id: string
+  /** Absolute executable path discovered from a platform-owned source. */
+  command: string
+  /** Fixed arguments placed before the Workspace directory. */
+  args: readonly string[]
+}
+
 /** One resolved Host launch target. */
 export interface ResolvedEditor {
   id: string

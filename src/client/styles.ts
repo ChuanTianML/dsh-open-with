@@ -98,6 +98,51 @@ const css = `
   line-height: 17px;
   color: var(--dsw-alias-label-tertiary);
 }
+.dsh-open-with-header-split {
+  display: inline-flex;
+  align-items: stretch;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid var(--dsw-alias-line-border-secondary);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+.dsh-open-with-header-primary,
+.dsh-open-with-header-chooser {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+.dsh-open-with-header-primary {
+  gap: 5px;
+  padding: 0 9px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.dsh-open-with-header-chooser {
+  width: 25px;
+  border-left: 1px solid var(--dsw-alias-line-border-secondary);
+  color: var(--dsw-alias-label-tertiary);
+}
+.dsh-open-with-header-primary:not(:disabled):hover,
+.dsh-open-with-header-chooser:not(:disabled):hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+.dsh-open-with-header-primary:focus-visible,
+.dsh-open-with-header-chooser:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: -2px;
+}
+.dsh-open-with-header-primary:disabled,
+.dsh-open-with-header-chooser:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
 `
 
 /** Inject the launcher stylesheet once; a second call is a no-op. */

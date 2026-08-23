@@ -1,10 +1,9 @@
 /**
  * dsh-open-with client plugin: the browser half of the workspace
- * overflow-menu editor launcher. Mounts the openWith Remote namespace
- * and registers the split action into the harness's
- * `sidebar.workspaces.row-menu` slot, with zh/en dictionaries. The row's
- * explicit click closes the menu and asks the Host to resolve both the
- * Workspace and the selected editor.
+ * editor launcher. Mounts the openWith Remote namespace, contributes a
+ * Session Header split button, and keeps the Workspace overflow-menu action
+ * for compatibility. Both entry points ask the Host to resolve the registered
+ * Workspace and allowlisted editor.
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
 /** Required services: slots, the gateway Remote face, and locale. */

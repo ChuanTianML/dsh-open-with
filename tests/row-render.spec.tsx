@@ -5,6 +5,7 @@ import { renderToString } from 'react-dom/server'
 import { fmt, zh } from '../src/client/locales.ts'
 import { OpenWithRow, type OpenWithRowProps } from '../src/client/row.tsx'
 import type { EditorCatalog } from '../src/types.ts'
+import { testCatalog, testPreference } from './client-fixtures.ts'
 
 afterEach(() => {
   cleanup()
@@ -54,7 +55,8 @@ function props(overrides: Partial<OpenWithRowProps> = {}): OpenWithRowProps {
     label: 'Project',
     cwd: '/projects/project',
     onClose: vi.fn(),
-    listEditors: vi.fn(async () => singleCatalog),
+    catalog: testCatalog(vi.fn(async () => singleCatalog)),
+    preference: testPreference(),
     open: vi.fn(async () => {}),
     showError: vi.fn(),
     t,
@@ -83,7 +85,7 @@ describe('OpenWithRow', () => {
     const first = render(<OpenWithRow {...props({
       onClose,
       open,
-      listEditors: vi.fn(async () => multiCatalog),
+      catalog: testCatalog(vi.fn(async () => multiCatalog)),
     })} />)
     await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
     fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
@@ -98,7 +100,7 @@ describe('OpenWithRow', () => {
     })
 
     first.unmount()
-    render(<OpenWithRow {...props({ listEditors: vi.fn(async () => multiCatalog) })} />)
+    render(<OpenWithRow {...props({ catalog: testCatalog(vi.fn(async () => multiCatalog)) })} />)
     await screen.findByRole('menuitem', { name: '在 Cursor 中打开 Project' })
   })
 
@@ -106,7 +108,7 @@ describe('OpenWithRow', () => {
     const keepParentOpen = vi.fn()
     render(<OpenWithRow {...props({
       keepParentOpen,
-      listEditors: vi.fn(async () => multiCatalog),
+      catalog: testCatalog(vi.fn(async () => multiCatalog)),
     })} />)
     await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
     fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
@@ -125,7 +127,7 @@ describe('OpenWithRow', () => {
   })
 
   it('shows missing configured editors as disabled chooser entries', async () => {
-    render(<OpenWithRow {...props({ listEditors: vi.fn(async () => multiCatalog) })} />)
+    render(<OpenWithRow {...props({ catalog: testCatalog(vi.fn(async () => multiCatalog)) })} />)
     await screen.findByRole('menuitem', { name: '在 Visual Studio Code 中打开 Project' })
     fireEvent.click(screen.getByRole('button', { name: '选择打开 Project 的方式' }))
     const missing = screen.getByRole('menuitem', { name: /Fleet — 不可用/u })
@@ -134,7 +136,7 @@ describe('OpenWithRow', () => {
   })
 
   it('keeps unavailable configured editors inspectable when none can launch', async () => {
-    render(<OpenWithRow {...props({ listEditors: vi.fn(async () => unavailableCatalog) })} />)
+    render(<OpenWithRow {...props({ catalog: testCatalog(vi.fn(async () => unavailableCatalog)) })} />)
     const primary = await screen.findByRole('menuitem', { name: /Visual Studio Code 无法用于打开 Project/u })
     expect(primary.hasAttribute('disabled')).toBe(true)
     expect(primary.textContent).toContain('不可用')
@@ -145,21 +147,21 @@ describe('OpenWithRow', () => {
   })
 
   it('shows the reason inline when the only configured target is unavailable', async () => {
-    render(<OpenWithRow {...props({ listEditors: vi.fn(async () => singleUnavailableCatalog) })} />)
+    render(<OpenWithRow {...props({ catalog: testCatalog(vi.fn(async () => singleUnavailableCatalog)) })} />)
     const primary = await screen.findByRole('menuitem', { name: /Fleet 无法用于打开 Project/u })
     expect(primary.hasAttribute('disabled')).toBe(true)
     expect(primary.textContent).toContain('在 Fleet 中打开 — 不可用')
     expect(primary.textContent).toContain('Executable "fleet" was not found')
-    expect(screen.queryByRole('button', { name: '选择打开 Project 的方式' })).toBeNull()
+    expect(screen.getByRole('button', { name: '选择打开 Project 的方式' })).toBeTruthy()
   })
 
   it('reports catalog and launch failures without throwing through the row', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     try {
       const failed = render(<OpenWithRow {...props({
-        listEditors: vi.fn(async () => { throw new Error('offline') }),
+        catalog: testCatalog(vi.fn(async () => { throw new Error('offline') })),
       })} />)
-      await waitFor(() => { expect(screen.getByRole('menuitem').textContent).toContain('无法加载打开方式') })
+      await waitFor(() => { expect(screen.getByRole('menuitem').textContent).toContain('重新检测编辑器') })
       expect(consoleError).toHaveBeenCalledWith(
         '[dsh-open-with] editor catalog failed:',
         expect.any(Error),

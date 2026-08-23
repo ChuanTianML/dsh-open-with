@@ -1,6 +1,6 @@
 /** Resolve editor executables across supported host platforms. */
 import { existsSync } from 'node:fs'
-import { delimiter, isAbsolute, join, win32 } from 'node:path'
+import { delimiter, join, posix, win32 } from 'node:path'
 
 type Exists = (path: string) => boolean
 
@@ -82,7 +82,8 @@ export function resolveExecutable(
   env: NodeJS.ProcessEnv = process.env,
   exists: Exists = existsSync,
 ): string | undefined {
-  if (isAbsolute(command)) return exists(command) ? command : undefined
+  const absolute = platform === 'win32' ? win32.isAbsolute(command) : posix.isAbsolute(command)
+  if (absolute) return exists(command) ? command : undefined
   const pathMatch = pathCandidates(command, platform, env).find(exists)
   if (pathMatch !== undefined) return pathMatch
   if (platform === 'win32' && command.toLowerCase() === 'code') {

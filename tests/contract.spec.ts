@@ -1,5 +1,5 @@
 /**
- * Wire-contract invariants: exactly two strict endpoints, one descriptor set
+ * Wire-contract invariants: exactly three strict endpoints, one descriptor set
  * shared verbatim by the Host manifest and the client contribution, and
  * boundary codecs that parse and reject their values.
  */
@@ -15,9 +15,9 @@ import { OPEN_WITH_REMOTE } from '../src/client/remote.ts'
 import { TYPERT_MANIFEST } from '../src/typert.ts'
 
 describe('the openWith wire contract', () => {
-  it('declares the two strict endpoints shared by host and client', () => {
-    expect(OPEN_WITH_INVOCATIONS).toHaveLength(2)
-    const [list, open] = OPEN_WITH_INVOCATIONS
+  it('declares the three strict endpoints shared by host and client', () => {
+    expect(OPEN_WITH_INVOCATIONS).toHaveLength(3)
+    const [list, open, refresh] = OPEN_WITH_INVOCATIONS
     expect(list).toMatchObject({
       id: 'dsh-open-with#openWith/list',
       method: 'list',
@@ -37,6 +37,14 @@ describe('the openWith wire contract', () => {
       expect.objectContaining({ name: 'editorId', wire: 'editorId', source: 'json' }),
     ])
     expect(open.result).toMatchObject({ mode: 'strict', typeSymbol: 'dsh-open-with#OpenResult' })
+    expect(refresh).toMatchObject({
+      id: 'dsh-open-with#openWith/refresh',
+      service: 'openWith',
+      namespace: 'openWith',
+      method: 'refresh',
+      parameters: [],
+      result: { mode: 'strict', typeSymbol: 'dsh-open-with#EditorCatalog' },
+    })
     // One source pins the wire: the manifest and the client contribution
     // reference the same descriptor array, never a copy.
     expect(TYPERT_MANIFEST.invocations).toBe(OPEN_WITH_INVOCATIONS)
