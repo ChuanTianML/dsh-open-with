@@ -92,8 +92,8 @@ export function OpenWithHeader({
         title={primary?.hint ?? primary?.label}
         onClick={() => { if (primary !== undefined) launch(primary.id) }}
       >
-        <IconRightUpOutline16 size={14} />
         <span>{t('header.open')}</span>
+        <IconRightUpOutline16 size={12} />
       </button>
       <button
         type="button"
@@ -104,7 +104,7 @@ export function OpenWithHeader({
         aria-expanded={menuOpen}
         onClick={() => { setMenuOpen(value => !value) }}
       >
-        <IconChevronDownOutline14 />
+        <IconChevronDownOutline14 size={12} />
       </button>
     </span>
   )

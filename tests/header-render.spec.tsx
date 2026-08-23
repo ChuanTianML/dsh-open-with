@@ -3,12 +3,14 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OpenWithHeader, type OpenWithHeaderProps } from '../src/client/header.tsx'
 import { en, fmt } from '../src/client/locales.ts'
+import { adoptStyles } from '../src/client/styles.ts'
 import type { EditorCatalog } from '../src/types.ts'
 import { testCatalog, testPreference } from './client-fixtures.ts'
 
 afterEach(() => {
   cleanup()
   window.localStorage.clear()
+  document.getElementById('dsh-open-with-styles')?.remove()
 })
 
 const initial: EditorCatalog = {
@@ -54,6 +56,16 @@ function props(overrides: Partial<OpenWithHeaderProps> = {}): OpenWithHeaderProp
 }
 
 describe('Session Header Open split button', () => {
+  it('uses the native Harness Header capsule geometry and semantic tokens', () => {
+    adoptStyles()
+    const css = document.getElementById('dsh-open-with-styles')?.textContent
+    expect(css).toContain('height: 32px')
+    expect(css).toContain('border: 1px solid var(--dsw-alias-border-l2)')
+    expect(css).toContain('border-radius: 18px')
+    expect(css).toContain('font-family: var(--dsw-font-family)')
+    expect(css).not.toContain('--dsw-alias-line-border-secondary')
+  })
+
   it('maps the current session through Workspace accounting and opens only by id', async () => {
     const open = vi.fn(async () => {})
     render(<OpenWithHeader {...props({ open })} />)

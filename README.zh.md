@@ -40,7 +40,7 @@
 把插件加入 Web profile：
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.0.tar.gz
+dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.1.tar.gz
 ```
 
 使用 `SIGTERM` 重启 Web 服务器，等待它退出后刷新页面。切勿使用 `kill -9`，否则可能中断 Session zstd 写入。使用以下命令确认安装版本：

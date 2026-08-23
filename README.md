@@ -40,7 +40,7 @@ PATH lookup applies on every platform. macOS and Windows also probe the standard
 Add the plugin to the Web profile:
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.0.tar.gz
+dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.1.tar.gz
 ```
 
 Restart the Web server with `SIGTERM`, wait for it to exit, and refresh the page. Never use `kill -9`; it can interrupt a Session zstd write. Confirm the installed version with:
