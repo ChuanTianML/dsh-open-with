@@ -23,6 +23,9 @@ await build({
   platform: 'node',
   target: ['node22'],
   sourcemap: true,
+  // Keep linked development dependencies under node_modules in source maps;
+  // resolving their real paths would publish the maintainer's absolute path.
+  preserveSymlinks: true,
   external: dshExternal,
   logLevel: 'info',
 })
@@ -35,6 +38,7 @@ await build({
   platform: 'node',
   target: ['node22'],
   sourcemap: true,
+  preserveSymlinks: true,
   external: dshExternal,
   logLevel: 'info',
 })
@@ -47,6 +51,7 @@ await build({
   platform: 'browser',
   target: ['es2022'],
   sourcemap: true,
+  preserveSymlinks: true,
   jsx: 'automatic',
   external: [...dshExternal, 'react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'scheduler'],
   banner: {

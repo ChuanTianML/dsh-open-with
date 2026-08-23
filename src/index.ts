@@ -1,6 +1,6 @@
 /**
  * dsh-open-with host plugin: mounts the `openWith` Typert Remote
- * service (list available editors and open a registered Workspace) and
+ * service (list, refresh, and open registered Workspace launch targets) and
  * registers its strict Typert manifest. The client half ships in the same
  * package (`./client`); the web server serves it under
  * /plugins/dsh-open-with/client.js, and it registers the split editor
@@ -12,6 +12,7 @@ import z from '@deepseek-ai/schemastery'
 import type {} from '@deepseek-ai/dsh-typert-registry'
 // Type-only: brings the `ctx.workspaceRegistry` Context merge into this program.
 import type {} from '@deepseek-ai/dsh-workspace'
+import { discoverEditorLaunches } from './discovery.ts'
 import { resolveEditors } from './editors.ts'
 import { OpenWithRuntime } from './runtime.ts'
 import { TYPERT_MANIFEST } from './typert.ts'
@@ -54,12 +55,17 @@ export const Config = z.object({
  * Mount the open-in-editor service and its strict Typert manifest.
  * @param ctx - host cordis context.
  * @param config - validated plugin configuration (schema defaults applied).
+ * @returns completion after the initial editor discovery and service registration.
  */
-export function apply(ctx: Context, config?: Config): void {
+export async function apply(ctx: Context, config?: Config): Promise<void> {
   const resolved: ResolvedConfig = Config(config ?? {})
-  const editors = resolveEditors(resolved)
-  new OpenWithRuntime(ctx, editors, resolved.defaultEditor)
-  // Strict endpoint registration: the gateway resolves list/open from this
+  const resolveRegistry = async () => {
+    const discovered = resolved.autoDetect ? await discoverEditorLaunches() : []
+    return resolveEditors(resolved, process.platform, process.env, undefined, discovered)
+  }
+  const editors = await resolveRegistry()
+  new OpenWithRuntime(ctx, editors, resolved.defaultEditor, resolveRegistry)
+  // Strict endpoint registration: the gateway resolves list/open/refresh from this
   // manifest, independent of decorator marker state.
   ctx.effect(() => {
     const dispose = ctx.typert.register(TYPERT_MANIFEST)

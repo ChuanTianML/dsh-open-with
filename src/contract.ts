@@ -2,8 +2,9 @@
  * The open-with wire contract, shared verbatim by the host manifest
  * (`ctx.typert.register` in typert.ts) and the client contribution
  * (`ctx.remote.$mount` in client/remote.ts). The list endpoint publishes safe
- * editor metadata; the open endpoint accepts only a registered Workspace id
- * and an editor id from that catalog.
+ * editor metadata; refresh returns a newly detected safe catalog; the open
+ * endpoint accepts only a registered Workspace id and an editor id from that
+ * catalog.
  */
 import { z } from 'zod'
 import type { InvocationDescriptor } from '@deepseek-ai/dsh-typert-protocol'
@@ -71,6 +72,19 @@ export const OPEN_WITH_INVOCATIONS: readonly InvocationDescriptor[] = [
       mode: 'strict',
       typeSymbol: 'dsh-open-with#OpenResult',
       schema: openResultSchema,
+    },
+  },
+  {
+    id: 'dsh-open-with#openWith/refresh',
+    service: 'openWith',
+    namespace: 'openWith',
+    method: 'refresh',
+    invocation: { kind: 'direct' },
+    parameters: [],
+    result: {
+      mode: 'strict',
+      typeSymbol: 'dsh-open-with#EditorCatalog',
+      schema: editorCatalogSchema,
     },
   },
 ]

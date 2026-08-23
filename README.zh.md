@@ -1,6 +1,6 @@
 # dsh-open-with
 
-从 DeepSeek Harness Web 界面用本机编辑器打开已经登记的 Workspace。Workspace 的 **…** 菜单可以直接启动首选编辑器；检测到多个启动目标时，还会提供编辑器选择菜单。
+从 DeepSeek Harness Web 界面用本机编辑器打开当前已经登记的 Workspace。Session 页头中的紧凑分段按钮可以直接启动首选编辑器，也可以打开完整的编辑器选择菜单；兼容客户端仍然保留 Workspace **…** 菜单入口。
 
 [English](README.md) | 中文
 
@@ -8,25 +8,27 @@
 
 [![为 DeepSeek Harness Workspace 选择本机编辑器](https://github.com/ChuanTianML/dsh-open-with/blob/open-with-assets/workspace-editor-chooser.gif?raw=true)](https://github.com/ChuanTianML/dsh-open-with/blob/open-with-assets/workspace-editor-chooser.gif)
 
-把鼠标移到 Workspace，打开 **…** 菜单，点击首选编辑器右侧的箭头，然后选择任一已检测目标。上面的录制使用真实 Harness Web 界面，并实际用 Cursor 打开了这个仓库。
+上面的录制展示了为兼容性保留的 Workspace 菜单入口。从 `0.2.0` 开始，同一个选择器也可以直接从当前 Session 页头使用。
 
 ## 功能
 
-- Host 会检测已安装的 VS Code、Cursor、Windsurf、Zed、常见 JetBrains IDE、系统终端和文件管理器；管理员配置可以新增启动目标，也可以覆盖内置项。
-- 主菜单行使用 Host 默认值或当前浏览器记住的编辑器打开 Workspace。点击右侧箭头可以选择其他编辑器；选中的编辑器会启动并成为当前浏览器的首选项。
+- Session 页头通过 Host 投影的 Workspace `sessionIds` 映射当前会话，不会根据浏览器路径猜测 Workspace。
+- Host 会检测 VS Code 系列、Cursor、Windsurf、Zed、Trae、VSCodium、常见 JetBrains IDE、Android Studio、Sublime Text、系统终端和文件管理器；管理员配置可以新增启动目标，也可以覆盖内置项。
+- 主操作使用 Host 默认值或当前浏览器记住的编辑器打开 Workspace。点击右侧箭头可以选择其他编辑器；选中的编辑器会启动并成为当前浏览器的首选项。
+- 选择“重新检测编辑器”会重新执行 Host 检测，并原子更新所有已经挂载的页头和 Workspace 菜单入口，不需要重启 DSH。
 - 配置过但找不到的编辑器会保留为禁用菜单项，并显示修复提示；未安装的自动检测候选不会占用菜单。
 - 客户端在 Host 声明 `sidebar.workspaces.row-menu` 时使用原生插槽；客户端尚未提供该插槽时，使用受限兼容适配器。
-- 编辑器进程启动后与 DSH Web 服务器分离，可以独立存活。
+- 编辑器进程启动后与 DSH Web 服务器分离，可以独立存活。Windows 启动会保留应用的首个可见窗口；子进程不会继承 Host 的 API key、token、密码及其他凭据环境变量。
 
 ## 自动检测目标
 
 | 平台 | 自动检测的目标 |
 | --- | --- |
-| macOS | VS Code、Cursor、Windsurf、Zed、IntelliJ IDEA、WebStorm、PyCharm、终端、Finder |
-| Windows | VS Code、Cursor、Windsurf、Zed、IntelliJ IDEA、WebStorm、PyCharm、Windows Terminal、文件资源管理器 |
-| Linux | VS Code、Cursor、Windsurf、Zed、IntelliJ IDEA、WebStorm、PyCharm、`x-terminal-emulator`、`xdg-open` |
+| macOS | VS Code、VS Code Insiders、Cursor、Windsurf、Zed、Trae、VSCodium、IntelliJ IDEA、WebStorm、PyCharm、GoLand、CLion、Rider、PhpStorm、RubyMine、DataGrip、RustRover、Android Studio、Sublime Text、终端、Finder |
+| Windows | 同一组编辑器应用，以及 Windows Terminal、文件资源管理器 |
+| Linux | 同一组编辑器应用，以及 `x-terminal-emulator`、`xdg-open` |
 
-所有平台都会查询 PATH；macOS 和 Windows 还会检查各内置配置中列出的标准应用目录。Host 插件加载时完成检测；安装新编辑器或修改配置后需要重启 DSH。
+所有平台都会查询 PATH；macOS 和 Windows 还会检查各内置配置中列出的标准应用目录。Windows 还会查询系统 App Paths 注册项和限定范围内的 JetBrains Toolbox apps 目录。Host 插件加载时以及用户选择“重新检测编辑器”时都会执行检测。修改插件配置仍然需要重启 DSH。
 
 ## 前置条件
 
@@ -38,7 +40,7 @@
 把插件加入 Web profile：
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.1.1.tar.gz
+dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.0.tar.gz
 ```
 
 使用 `SIGTERM` 重启 Web 服务器，等待它退出后刷新页面。切勿使用 `kill -9`，否则可能中断 Session zstd 写入。使用以下命令确认安装版本：
@@ -77,7 +79,9 @@ dsh plugin --profile web list dsh-open-with --depth 0
 
 浏览器只能获得编辑器 id、名称、可用状态和修复提示，命令和参数不会经过线协议。打开请求只携带 Workspace id 和编辑器 id；Host 通过 `ctx.workspaceRegistry` 解析 Workspace，并通过已经校验的编辑器白名单解析命令，然后才会启动进程。
 
-插件只能打开仍然存在目录的已登记 Workspace。它不会读取、写入、克隆、同步或上传 Workspace 文件，也不注册模型工具、技能、提示词或模型可见事件。启动操作来自用户在 Workspace 菜单中的明确点击，因此不需要 Agent 审批。
+编辑器进程会继承打开图形应用所需的桌面和会话变量，但 Host 会移除变量名表明其包含 API key、access token、secret、credential、password、private key、connection string 或 database URL 的环境变量。`SSH_AUTH_SOCK` 只指向用户的 agent socket，并不直接包含凭据，因此会保留。
+
+插件只能打开仍然存在目录的已登记 Workspace。它不会读取、写入、克隆、同步或上传 Workspace 文件，也不注册模型工具、技能、提示词或模型可见事件。启动操作来自用户在 Web 界面中的明确点击，因此不需要 Agent 审批。
 
 首选编辑器保存在当前浏览器中。不同浏览器可以选择不同的默认值，而不改变 Host 配置。
 

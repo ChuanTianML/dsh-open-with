@@ -20,7 +20,8 @@ export interface LegacyWorkspaceMenuOptions {
   workspaces: WorkspaceListSource
   workspaceT: WorkspaceTranslate
   rowT: OpenWithMenuRowProps['t']
-  listEditors: OpenWithMenuRowProps['listEditors']
+  catalog: OpenWithMenuRowProps['catalog']
+  preference: OpenWithMenuRowProps['preference']
   open: OpenWithMenuRowProps['open']
   showError: OpenWithMenuRowProps['showError']
 }
@@ -181,7 +182,8 @@ export function installLegacyWorkspaceMenu(options: LegacyWorkspaceMenuOptions):
         workspaceId={active.workspace.workspaceId}
         label={active.workspace.title}
         onClose={close}
-        listEditors={options.listEditors}
+        catalog={options.catalog}
+        preference={options.preference}
         open={options.open}
         showError={options.showError}
         t={options.rowT}

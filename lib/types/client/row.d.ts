@@ -1,10 +1,13 @@
 import type { GlobalStandardProps, PropsLocale } from '@deepseek-ai/dsh-client-ui-slots';
-import type { EditorCatalog } from '../types.ts';
+import { EditorCatalogController } from './catalog.ts';
 import { type OpenWithKey } from './locales.ts';
+import { EditorPreference } from './preference.ts';
 /** Host-backed actions supplied to every row contribution. */
 export interface OpenWithInjected {
-    /** Load the browser-safe editor catalog. */
-    listEditors: () => Promise<EditorCatalog>;
+    /** Shared browser-safe editor catalog and refresh controller. */
+    catalog: EditorCatalogController;
+    /** Shared browser-local editor preference. */
+    preference: EditorPreference;
     /** Open a registered Workspace in one catalog editor. */
     open: (workspaceId: string, editorId: string) => Promise<void>;
     /** Announce a launch failure outside the closing Workspace menu. */
@@ -40,6 +43,6 @@ export interface OpenWithMenuRowProps extends OpenWithInjected {
     keepParentOpen?: () => void;
 }
 /** Render the locale-following editor launcher for one Workspace row. */
-export declare function OpenWithMenuRow({ workspaceId, label, onClose, listEditors, open, showError, t, eagerPointerActivation, keepParentOpen, }: OpenWithMenuRowProps): import("react").JSX.Element | null;
+export declare function OpenWithMenuRow({ workspaceId, label, onClose, catalog: catalogController, preference, open, showError, t, eagerPointerActivation, keepParentOpen, }: OpenWithMenuRowProps): import("react").JSX.Element | null;
 /** Native row-menu slot entry. */
 export declare function OpenWithRow(props: OpenWithRowProps): import("react").JSX.Element;

@@ -6,6 +6,7 @@ import { Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 import { installLegacyWorkspaceMenu, installWorkspaceActionKeyboardAccess } from '../src/client/legacy-menu.tsx'
 import { en } from '../src/client/locales.ts'
 import type { EditorCatalog } from '../src/types.ts'
+import { testCatalog, testPreference } from './client-fixtures.ts'
 
 afterEach(() => {
   cleanup()
@@ -31,7 +32,7 @@ const multiCatalog: EditorCatalog = {
   defaultEditorId: 'cursor',
 }
 
-const listEditors = async (): Promise<EditorCatalog> => catalog
+const catalogController = () => testCatalog(async () => catalog)
 const showError = vi.fn()
 
 function translate<K extends string>(dict: Record<string, string>): (key: K, params?: Record<string, unknown>) => string {
@@ -90,7 +91,8 @@ describe('rc.6 Workspace menu compatibility', () => {
       workspaces: { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-1', title: 'dsh', path: '/work/dsh' }] }) },
       workspaceT: translate(workspaceStrings),
       rowT: translate(en),
-      listEditors,
+      catalog: catalogController(),
+      preference: testPreference(),
       open,
       showError,
     })
@@ -120,7 +122,8 @@ describe('rc.6 Workspace menu compatibility', () => {
       },
       workspaceT: translate(workspaceStrings),
       rowT: translate(en),
-      listEditors,
+      catalog: catalogController(),
+      preference: testPreference(),
       open: vi.fn(async () => {}),
       showError,
     })
@@ -144,7 +147,8 @@ describe('rc.6 Workspace menu compatibility', () => {
       workspaces: { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-1', title: 'dsh', path: '/work/dsh' }] }) },
       workspaceT: translate(workspaceStrings),
       rowT: translate(en),
-      listEditors,
+      catalog: catalogController(),
+      preference: testPreference(),
       open: vi.fn(async () => {}),
       showError,
     })
@@ -173,7 +177,8 @@ describe('rc.6 Workspace menu compatibility', () => {
       workspaces: { getSnapshot: () => ({ items: [{ workspaceId: 'workspace-1', title: 'dsh', path: '/work/dsh' }] }) },
       workspaceT: translate(workspaceStrings),
       rowT: translate(en),
-      listEditors: async () => multiCatalog,
+      catalog: testCatalog(async () => multiCatalog),
+      preference: testPreference(),
       open,
       showError,
     })

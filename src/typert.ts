@@ -34,6 +34,11 @@ export const TYPERT_MANIFEST: TypertContribution = {
             name: 'open',
             signature: 'open(workspaceId: string, editorId: string, signal?: AbortSignal): Promise<{ opened: true }>',
           },
+          {
+            kind: 'method',
+            name: 'refresh',
+            signature: 'refresh(): Promise<EditorCatalog>',
+          },
         ],
         types: [],
       },

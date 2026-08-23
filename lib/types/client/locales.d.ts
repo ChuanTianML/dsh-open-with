@@ -1,6 +1,7 @@
 /** `open-with` locale namespace: workspace editor-launcher copy. */
 /** Simplified Chinese dictionary (the key-set source of truth). */
 export declare const zh: {
+    'header.open': string;
     'menu.openInEditor': string;
     'menu.openInEditor.aria': string;
     'menu.openUnavailable.aria': string;
@@ -8,12 +9,16 @@ export declare const zh: {
     'menu.loading': string;
     'menu.catalogFailed': string;
     'menu.openFailed': string;
+    'menu.refresh': string;
+    'menu.refreshing': string;
+    'menu.refreshFailed': string;
     'menu.unavailable': string;
 };
 /** The `open-with` namespace key union. */
 export type OpenWithKey = keyof typeof zh;
 /** English dictionary, checked complete against the zh key set. */
 export declare const en: {
+    'header.open': string;
     'menu.openInEditor': string;
     'menu.openInEditor.aria': string;
     'menu.openUnavailable.aria': string;
@@ -21,6 +26,9 @@ export declare const en: {
     'menu.loading': string;
     'menu.catalogFailed': string;
     'menu.openFailed': string;
+    'menu.refresh': string;
+    'menu.refreshing': string;
+    'menu.refreshFailed': string;
     'menu.unavailable': string;
 };
 /** Locale namespace id registered under ctx.locale. */

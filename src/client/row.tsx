@@ -1,7 +1,8 @@
 /** Workspace-row editor launcher: direct default action plus an editor chooser. */
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   IconChevronRightOutline14,
+  IconRefreshOutline14,
   IconRightUpOutline16,
   Menu,
   type MenuItem,
@@ -10,15 +11,19 @@ import type {
   GlobalStandardProps,
   PropsLocale,
 } from '@deepseek-ai/dsh-client-ui-slots'
-import type { EditorCatalog, EditorView } from '../types.ts'
+import type { EditorView } from '../types.ts'
+import { EditorCatalogController, useEditorCatalog } from './catalog.ts'
 import { fmt, type OpenWithKey } from './locales.ts'
+import { EditorPreference, preferredEditor } from './preference.ts'
 
-const PREFERRED_EDITOR_KEY = 'dsh-open-with.preferred-editor'
+const REFRESH_ID = 'dsh-open-with:refresh'
 
 /** Host-backed actions supplied to every row contribution. */
 export interface OpenWithInjected {
-  /** Load the browser-safe editor catalog. */
-  listEditors: () => Promise<EditorCatalog>
+  /** Shared browser-safe editor catalog and refresh controller. */
+  catalog: EditorCatalogController
+  /** Shared browser-local editor preference. */
+  preference: EditorPreference
   /** Open a registered Workspace in one catalog editor. */
   open: (workspaceId: string, editorId: string) => Promise<void>
   /** Announce a launch failure outside the closing Workspace menu. */
@@ -63,61 +68,23 @@ export interface OpenWithMenuRowProps extends OpenWithInjected {
   keepParentOpen?: () => void
 }
 
-function readPreferredEditor(): string | undefined {
-  if (typeof window === 'undefined') return undefined
-  try {
-    return window.localStorage.getItem(PREFERRED_EDITOR_KEY) ?? undefined
-  } catch {
-    // Browser storage denial leaves Host configuration authoritative.
-    return undefined
-  }
-}
-
-function writePreferredEditor(editorId: string): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(PREFERRED_EDITOR_KEY, editorId)
-  } catch {
-    // Opening the editor must not depend on browser storage availability.
-  }
-}
-
-function preferredEditor(catalog: EditorCatalog, storedId: string | undefined): EditorView | undefined {
-  const available = catalog.editors.filter(editor => editor.available)
-  return available.find(editor => editor.id === storedId)
-    ?? available.find(editor => editor.id === catalog.defaultEditorId)
-    ?? available[0]
-}
-
 /** Render the locale-following editor launcher for one Workspace row. */
 export function OpenWithMenuRow({
   workspaceId,
   label,
   onClose,
-  listEditors,
+  catalog: catalogController,
+  preference,
   open,
   showError,
   t,
   eagerPointerActivation = false,
   keepParentOpen,
 }: OpenWithMenuRowProps) {
-  const [catalog, setCatalog] = useState<EditorCatalog | undefined>()
-  const [loadError, setLoadError] = useState(false)
+  const { catalog, loading, loadError } = useEditorCatalog(catalogController)
   const [chooserOpen, setChooserOpen] = useState(false)
-  const [preferredId, setPreferredId] = useState(readPreferredEditor)
+  const preferredId = useSyncExternalStore(preference.subscribe, preference.getSnapshot, preference.getSnapshot)
   const activated = useRef(false)
-
-  useEffect(() => {
-    let live = true
-    listEditors().then(
-      value => { if (live) setCatalog(value) },
-      (error: unknown) => {
-        console.error('[dsh-open-with] editor catalog failed:', error)
-        if (live) setLoadError(true)
-      },
-    )
-    return () => { live = false }
-  }, [listEditors])
 
   const preferred = catalog === undefined ? undefined : preferredEditor(catalog, preferredId)
   const menuItems = useMemo<readonly MenuItem[]>(() => catalog?.editors.map(editor => ({
@@ -141,8 +108,7 @@ export function OpenWithMenuRow({
     void open(workspaceId, editor.id).then(
       () => {
         setChooserOpen(false)
-        setPreferredId(editor.id)
-        writePreferredEditor(editor.id)
+        preference.select(editor.id)
         onClose()
       },
       (error: unknown) => {
@@ -154,10 +120,24 @@ export function OpenWithMenuRow({
     )
   }
 
+  const refresh = (): void => {
+    void catalogController.refresh().catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error)
+      showError(fmt(t('menu.refreshFailed'), { message }))
+      console.error('[dsh-open-with] editor refresh failed:', error)
+    })
+  }
+
   if (catalog === undefined) {
-    const text = loadError ? t('menu.catalogFailed') : t('menu.loading')
+    const text = loadError ? t('menu.refresh') : t('menu.loading')
     return (
-      <button type="button" role="menuitem" className="dsh-open-with-row" disabled>
+      <button
+        type="button"
+        role="menuitem"
+        className="dsh-open-with-row"
+        disabled={!loadError || loading}
+        onClick={loadError ? refresh : undefined}
+      >
         <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
         <span className="dsh-open-with-label">{text}</span>
       </button>
@@ -176,7 +156,6 @@ export function OpenWithMenuRow({
     )
   }
 
-  const availableCount = catalog.editors.filter(editor => editor.available).length
   const primary = (
     <div className="dsh-open-with-split">
       <button
@@ -208,25 +187,22 @@ export function OpenWithMenuRow({
           )}
         </span>
       </button>
-      {catalog.editors.length > 1 && (
-        <button
-          type="button"
-          className="dsh-open-with-chooser"
-          aria-label={fmt(t('menu.openWith.aria'), { name: label })}
-          aria-haspopup="menu"
-          aria-expanded={chooserOpen}
-          onClick={(event) => {
-            event.stopPropagation()
-            setChooserOpen(value => !value)
-          }}
-        >
-          <IconChevronRightOutline14 />
-        </button>
-      )}
+      <button
+        type="button"
+        className="dsh-open-with-chooser"
+        aria-label={fmt(t('menu.openWith.aria'), { name: label })}
+        aria-haspopup="menu"
+        aria-expanded={chooserOpen}
+        onClick={(event) => {
+          event.stopPropagation()
+          setChooserOpen(value => !value)
+        }}
+      >
+        <IconChevronRightOutline14 />
+      </button>
     </div>
   )
 
-  if (catalog.editors.length === 1) return primary
   return (
     <span
       className="dsh-open-with-event-bridge"
@@ -239,6 +215,10 @@ export function OpenWithMenuRow({
         items={menuItems}
         selectedId={preferred?.id}
         onSelect={(editorId) => {
+          if (editorId === REFRESH_ID) {
+            refresh()
+            return
+          }
           const editor = catalog.editors.find(item => item.id === editorId)
           if (editor !== undefined) launch(editor)
         }}
@@ -247,7 +227,12 @@ export function OpenWithMenuRow({
         portal
         compact
         className="dsh-open-with-menu"
-        footer={availableCount === 0 ? [{ id: 'none', label: t('menu.catalogFailed'), disabled: true }] : undefined}
+        footer={[{
+          id: REFRESH_ID,
+          label: loading ? t('menu.refreshing') : t('menu.refresh'),
+          icon: <IconRefreshOutline14 />,
+          disabled: loading,
+        }]}
       />
     </span>
   )

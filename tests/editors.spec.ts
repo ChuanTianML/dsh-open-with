@@ -76,6 +76,21 @@ describe('editor registry resolution', () => {
     expect(JSON.stringify(catalog)).not.toContain('/bin/')
   })
 
+  it('uses Windows App Paths and Toolbox routes before fixed fallbacks', () => {
+    const editors = resolveEditors(config(), 'win32', {
+      PATH: 'C:\\Windows\\System32',
+      ProgramFiles: 'C:\\Program Files',
+      WINDIR: 'C:\\Windows',
+    }, path => path === 'D:\\Apps\\Cursor\\Cursor.exe' || path === 'D:\\Toolbox\\GoLand\\bin\\goland64.exe', [
+      { id: 'cursor', command: 'D:\\Apps\\Cursor\\Cursor.exe', args: [] },
+      { id: 'goland', command: 'D:\\Toolbox\\GoLand\\bin\\goland64.exe', args: [] },
+    ])
+    expect(editors).toEqual([
+      expect.objectContaining({ id: 'cursor', command: 'D:\\Apps\\Cursor\\Cursor.exe', available: true }),
+      expect.objectContaining({ id: 'goland', command: 'D:\\Toolbox\\GoLand\\bin\\goland64.exe', available: true }),
+    ])
+  })
+
   it('fails clearly when discovery is disabled without configured editors', () => {
     expect(() => resolveEditors(config({ autoDetect: false }), 'linux', {}, () => false))
       .toThrow(/editor registry is empty/)
