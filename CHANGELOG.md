@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 — 2026-08-23
+
+- Align the Session Header split button with the Harness native 32px outlined capsule, typography, semantic tokens, icon scale, hover state, and disabled state.
+
 ## 0.2.0 — 2026-08-23
 
 - Add a compact Open split button to the current Session Header while retaining the Workspace-menu entry.
