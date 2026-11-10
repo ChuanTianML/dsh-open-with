@@ -103,8 +103,17 @@ try {
   await page.screenshot({ path: join(work, 'open-with-desktop.png'), fullPage: true, animations: 'disabled' })
   await page.setViewportSize({ width: 700, height: 900 })
   await page.screenshot({ path: join(work, 'open-with-narrow.png'), fullPage: true, animations: 'disabled' })
+  await page.keyboard.press('Escape')
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await workspace.hover()
+  await page.getByRole('button', { name: 'Workspace actions for workspace', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Open workspace in Second fixture editor', exact: true }).click()
+  entries = await launches(3)
+  assert.equal(entries[2].editor, 'second')
+  assert.equal(entries[2].cwd, workspacePath)
+  assert.equal(entries[2].secret, null)
   assert.deepEqual(errors, [])
-  console.log('PASS: real CLI install, Remote registration, header default/chooser launches, preference reload, refresh, unavailable editor, credential filtering, no page errors')
+  console.log('PASS: real CLI install, Remote registration, header default/chooser and Workspace-menu launches, preference reload, refresh, unavailable editor, credential filtering, no page errors')
   console.log(`Evidence: ${work}`)
 } catch (error) {
   if (page) {

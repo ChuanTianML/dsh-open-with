@@ -27,8 +27,8 @@ Workspace identity lookup retain their responsibilities.
   persistence APIs, create its registered Workspace, and start the Web app.
 
 The browser scenario launches a harmless Node editor fixture for the primary
-and alternate choices, verifies the exact Workspace directory and removal of a
-synthetic secret environment variable, reloads the saved preference, refreshes
+and alternate choices and the Workspace-menu entry, verifies the exact Workspace
+directory and removal of a synthetic secret environment variable, reloads the saved preference, refreshes
 the catalog, and checks unavailable editors and browser errors. Desktop and
 narrow-viewport screenshots are retained under the printed evidence directory.
 It does not invoke a model or open a user's editor or project.
