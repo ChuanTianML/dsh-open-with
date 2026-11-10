@@ -4,6 +4,7 @@
 
 - Support Harness >=0.2.2-rc.1 and Node >=24.9.0 with current renderer, Gateway, icon exports, and lazy strict codecs.
 - Remove the obsolete invariant companion export from the retired diagnostics API.
+- Resolve PATH entries using the selected platform's path rules, including cross-platform validation.
 - Dispose the browser stylesheet with its plugin registration.
 - Add isolated development linking, real CLI/browser editor-launch acceptance, Linux/Windows CI, and npm/Hub release verification.
 
