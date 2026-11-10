@@ -16,7 +16,9 @@ exports. Version 0.3.0 uses lazy codec factories and current client services.
 Windows CI also exposed a PATH resolver mixing its explicit target platform
 with the runner's path separator and join operation. The resolver now uses
 POSIX or Windows path rules consistently; the existing cross-platform
-executable-resolution scenario covers this behavior.
+executable-resolution scenario covers this behavior. Development linking also
+includes the bundled schema utility dependency explicitly so Windows junction
+resolution can build the same artifact.
 
 The retired invariant companion is excluded from this version's exports.
 The default Host plugin, allowed-editor checks, credential filtering, and

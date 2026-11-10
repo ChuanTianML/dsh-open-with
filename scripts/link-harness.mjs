@@ -8,7 +8,9 @@ const root = fileURLToPath(new URL('..', import.meta.url))
 const harness = resolve(process.env.DSH_HARNESS_ROOT ?? join(root, '.sandbox/harness'))
 if (!existsSync(join(harness, 'package.json'))) throw new Error(`Harness checkout not found: ${harness}`)
 const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
-const wanted = new Set([...Object.keys(manifest.peerDependencies), '@deepseek-ai/schemastery'].filter(name => name.startsWith('@deepseek-ai/')))
+// Schema dependencies are bundled; Windows junction resolution also needs their explicit root links.
+const bundled = ['@deepseek-ai/schemastery', '@deepseek-ai/cosmokit']
+const wanted = new Set([...Object.keys(manifest.peerDependencies), ...bundled].filter(name => name.startsWith('@deepseek-ai/')))
 const targets = new Map()
 function visit(directory, depth) {
   const file = join(directory, 'package.json')
