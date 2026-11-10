@@ -5,7 +5,11 @@
  * for compatibility. Both entry points ask the Host to resolve the registered
  * Workspace and allowlisted editor.
  */
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-api-gateway/client'
+import type {} from '@deepseek-ai/dsh-api-workspace-controller/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 // Type-only: pulls the ui-workspace SlotMap merge (the row-menu owner share).
 import type {} from '@deepseek-ai/dsh-client-ui-workspace/client'
 // Type-only: pulls the Session Header slot declarations and runtime props.
@@ -59,7 +63,7 @@ interface WorkspaceRowMenuSlots {
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  adoptStyles()
+  ctx.effect(adoptStyles, 'dsh-open-with: styles')
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-open-with: dictionaries')
   const feedback = createOpenWithFeedback(document)
   ctx.effect(() => feedback.dispose, 'dsh-open-with: feedback')
@@ -119,9 +123,8 @@ export function apply(ctx: ClientContext): void {
     }
   }
 
-  // The published Harness package does not yet carry this future slot's
-  // declaration, so this narrow adapter keeps compile-time compatibility
-  // without claiming ownership of the host SlotMap contract.
+  // The optional Workspace row-menu slot is owned by its host, so its
+  // structural adapter does not extend the global SlotMap.
   const rowMenuSlots = ctx.slots as unknown as WorkspaceRowMenuSlots
   const face = (): OpenWithInjected => ({ catalog, preference, open, showError: feedback.showError })
   rowMenuSlots.inject('sidebar.workspaces.row-menu', () => rowMenuSlots.register({
@@ -145,9 +148,8 @@ export function apply(ctx: ClientContext): void {
     ctx.locale.bind('workspace'),
   ), 'dsh-open-with: keyboard workspace actions')
 
-  // The latest public npm build (0.1.0-rc.6) predates the Workspace row-menu
-  // slot. Keep its DOM adapter live only while that declaration is absent;
-  // a newer runtime declaring the slot immediately tears the adapter down.
+  // Keep the DOM adapter active only while the host does not declare the
+  // Workspace row-menu slot.
   ctx.effect(() => {
     let disposeLegacy: (() => void) | undefined
     const reconcile = (): void => {

@@ -1,9 +1,9 @@
 /** Current-session Header split button backed by the registered Workspace. */
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import {
-  IconChevronDownOutline14,
-  IconRefreshOutline14,
-  IconRightUpOutline16,
+  IconChevronDownOutlineRegular,
+  IconRefreshOutlineRegular,
+  IconRightUpOutlineRegular,
   Menu,
   type MenuItem,
 } from '@deepseek-ai/dsh-client-ui-primitives'
@@ -93,7 +93,7 @@ export function OpenWithHeader({
         onClick={() => { if (primary !== undefined) launch(primary.id) }}
       >
         <span>{t('header.open')}</span>
-        <IconRightUpOutline16 size={12} />
+        <IconRightUpOutlineRegular size={12} />
       </button>
       <button
         type="button"
@@ -104,7 +104,7 @@ export function OpenWithHeader({
         aria-expanded={menuOpen}
         onClick={() => { setMenuOpen(value => !value) }}
       >
-        <IconChevronDownOutline14 size={12} />
+        <IconChevronDownOutlineRegular size={12} />
       </button>
     </span>
   )
@@ -126,7 +126,7 @@ export function OpenWithHeader({
       footer={[{
         id: REFRESH_ID,
         label: loading ? t('menu.refreshing') : t('menu.refresh'),
-        icon: <IconRefreshOutline14 />,
+        icon: <IconRefreshOutlineRegular />,
         disabled: loading,
       }]}
     />

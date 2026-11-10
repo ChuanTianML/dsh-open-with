@@ -10,6 +10,8 @@
  */
 import { build } from 'esbuild'
 import { mkdirSync } from 'node:fs'
+import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 
 mkdirSync('lib', { recursive: true })
 
@@ -25,19 +27,6 @@ await build({
   sourcemap: true,
   // Keep linked development dependencies under node_modules in source maps;
   // resolving their real paths would publish the maintainer's absolute path.
-  preserveSymlinks: true,
-  external: dshExternal,
-  logLevel: 'info',
-})
-
-await build({
-  entryPoints: ['src/invariant.ts'],
-  outfile: 'lib/invariant.js',
-  bundle: true,
-  format: 'esm',
-  platform: 'node',
-  target: ['node22'],
-  sourcemap: true,
   preserveSymlinks: true,
   external: dshExternal,
   logLevel: 'info',
@@ -64,4 +53,4 @@ await build({
 })
 
 import { execFileSync } from 'node:child_process'
-execFileSync('node_modules/.bin/tsc', ['-p', 'tsconfig.json'], { stdio: 'inherit' })
+execFileSync(process.execPath, [fileURLToPath(import.meta.resolve('typescript/bin/tsc')), '-p', 'tsconfig.json'], { stdio: 'inherit' })

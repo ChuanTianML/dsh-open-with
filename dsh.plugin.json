@@ -1,10 +1,10 @@
 {
   "id": "dsh-open-with",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "lib/index.js",
   "description": "Open the current registered workspace in detected or configured local editors from the Web GUI.",
   "engines": {
-    "dsh": ">=0.1.0-rc.5"
+    "dsh": ">=0.2.2-rc.1 <0.3.0"
   },
   "contributes": {
     "tools": [],

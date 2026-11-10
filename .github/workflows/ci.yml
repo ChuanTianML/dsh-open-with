@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  DSH_COMMIT: 66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.15.0
+      - run: corepack enable
+      - run: corepack install --global pnpm@11.7.0
+      - run: pnpm install --frozen-lockfile
+      - name: Check out verified Harness
+        run: |
+          git init .sandbox/harness
+          git -C .sandbox/harness remote add origin https://github.com/deepseek-ai/deepseek-harness.git
+          git -C .sandbox/harness fetch --depth=1 origin "$DSH_COMMIT"
+          git -C .sandbox/harness checkout --detach FETCH_HEAD
+      - name: Build verified Harness
+        working-directory: .sandbox/harness
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+      - run: pnpm run check
+      - run: pnpm run pack:check
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run test:browser

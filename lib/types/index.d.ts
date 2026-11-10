@@ -32,35 +32,35 @@ export interface Config {
  * partial input, so `Config({})` yields the defaults (what the Loader does
  * for cordis.yml compositions).
  */
-export declare const Config: z<Schemastery.ObjectS<{
-    autoDetect: z<boolean, boolean>;
+export declare const Config: z<Schemastery.ObjectS<NoInfer<{
+    autoDetect: z<boolean, boolean, "defined">;
     editors: z<({
         id?: string | null | undefined;
         label?: string | null | undefined;
         command?: string | null | undefined;
         args?: string[] | null | undefined;
-    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<{
-        id: z<string, string>;
-        label: z<string, string>;
-        command: z<string, string>;
-        args: z<string[], string[]>;
-    }>[]>;
-    defaultEditor: z<string, string>;
-}>, Schemastery.ObjectT<{
-    autoDetect: z<boolean, boolean>;
+    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<NoInfer<{
+        id: z<string, string, "plain">;
+        label: z<string, string, "plain">;
+        command: z<string, string, "plain">;
+        args: z<string[], string[], "defined">;
+    }>>[], "defined">;
+    defaultEditor: z<string, string, "defined">;
+}>>, Schemastery.ObjectT<NoInfer<{
+    autoDetect: z<boolean, boolean, "defined">;
     editors: z<({
         id?: string | null | undefined;
         label?: string | null | undefined;
         command?: string | null | undefined;
         args?: string[] | null | undefined;
-    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<{
-        id: z<string, string>;
-        label: z<string, string>;
-        command: z<string, string>;
-        args: z<string[], string[]>;
-    }>[]>;
-    defaultEditor: z<string, string>;
-}>>;
+    } & import("@deepseek-ai/cosmokit").Dict)[], Schemastery.ObjectT<NoInfer<{
+        id: z<string, string, "plain">;
+        label: z<string, string, "plain">;
+        command: z<string, string, "plain">;
+        args: z<string[], string[], "defined">;
+    }>>[], "defined">;
+    defaultEditor: z<string, string, "defined">;
+}>>, "plain">;
 /**
  * Mount the open-in-editor service and its strict Typert manifest.
  * @param ctx - host cordis context.

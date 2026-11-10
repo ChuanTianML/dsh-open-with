@@ -46,9 +46,6 @@ const t = ((key: string, params?: Record<string, string>) => {
   return params === undefined ? template : fmt(template, params)
 }) as OpenWithRowProps['t']
 
-const useSessions = (() => undefined) as unknown as OpenWithRowProps['useSessions']
-const useWorkspaces = (() => undefined) as unknown as OpenWithRowProps['useWorkspaces']
-
 function props(overrides: Partial<OpenWithRowProps> = {}): OpenWithRowProps {
   return {
     workspaceId: 'workspace-1',
@@ -60,8 +57,6 @@ function props(overrides: Partial<OpenWithRowProps> = {}): OpenWithRowProps {
     open: vi.fn(async () => {}),
     showError: vi.fn(),
     t,
-    useSessions,
-    useWorkspaces,
     ...overrides,
   }
 }

@@ -1,2 +1,2 @@
-/** Inject the launcher stylesheet once; a second call is a no-op. */
-export declare function adoptStyles(): void;
+/** Install one owned stylesheet and return its disposer; existing styles remain owned by their installer. */
+export declare function adoptStyles(): () => void;
