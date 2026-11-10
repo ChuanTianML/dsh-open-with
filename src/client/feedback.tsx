@@ -1,5 +1,5 @@
 /** Persistent browser feedback for launch failures that outlives a closing menu. */
-import { IconWarningOutline16, Toast } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconWarningOutlineRegular, Toast } from '@deepseek-ai/dsh-client-ui-primitives'
 import { createRoot } from 'react-dom/client'
 
 /** Imperative feedback surface shared by native and compatibility menu rows. */
@@ -26,7 +26,7 @@ export function createOpenWithFeedback(document: Document): OpenWithFeedback {
         <Toast
           key={ownSequence}
           text={text}
-          icon={<IconWarningOutline16 />}
+          icon={<IconWarningOutlineRegular />}
           onDone={() => {
             if (!disposed && ownSequence === sequence) root.render(null)
           }}

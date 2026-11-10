@@ -1,14 +1,13 @@
 /** Workspace-row editor launcher: direct default action plus an editor chooser. */
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
-  IconChevronRightOutline14,
-  IconRefreshOutline14,
-  IconRightUpOutline16,
+  IconChevronRightOutlineRegular,
+  IconRefreshOutlineRegular,
+  IconRightUpOutlineRegular,
   Menu,
   type MenuItem,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type {
-  GlobalStandardProps,
   PropsLocale,
 } from '@deepseek-ai/dsh-client-ui-slots'
 import type { EditorView } from '../types.ts'
@@ -48,7 +47,6 @@ export interface WorkspaceRowOwnerProps {
 /** Full native row props without assuming an unpublished SlotMap declaration. */
 export type OpenWithRowProps =
   WorkspaceRowOwnerProps
-  & GlobalStandardProps
   & PropsLocale<'open-with'>
   & OpenWithInjected
   & {
@@ -138,7 +136,7 @@ export function OpenWithMenuRow({
         disabled={!loadError || loading}
         onClick={loadError ? refresh : undefined}
       >
-        <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
+        <span className="dsh-open-with-icon"><IconRightUpOutlineRegular /></span>
         <span className="dsh-open-with-label">{text}</span>
       </button>
     )
@@ -150,7 +148,7 @@ export function OpenWithMenuRow({
   if (primaryEditor === undefined) {
     return (
       <button type="button" role="menuitem" className="dsh-open-with-row" disabled>
-        <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
+        <span className="dsh-open-with-icon"><IconRightUpOutlineRegular /></span>
         <span className="dsh-open-with-label">{t('menu.catalogFailed')}</span>
       </button>
     )
@@ -176,7 +174,7 @@ export function OpenWithMenuRow({
           if (eagerPointerActivation && event.button === 0) launch(primaryEditor)
         }}
       >
-        <span className="dsh-open-with-icon"><IconRightUpOutline16 /></span>
+        <span className="dsh-open-with-icon"><IconRightUpOutlineRegular /></span>
         <span className="dsh-open-with-label dsh-open-with-label-stack">
           <span>
             {fmt(t('menu.openInEditor'), { editor: primaryEditor.label })}
@@ -198,7 +196,7 @@ export function OpenWithMenuRow({
           setChooserOpen(value => !value)
         }}
       >
-        <IconChevronRightOutline14 />
+        <IconChevronRightOutlineRegular />
       </button>
     </div>
   )
@@ -230,7 +228,7 @@ export function OpenWithMenuRow({
         footer={[{
           id: REFRESH_ID,
           label: loading ? t('menu.refreshing') : t('menu.refresh'),
-          icon: <IconRefreshOutline14 />,
+          icon: <IconRefreshOutlineRegular />,
           disabled: loading,
         }]}
       />

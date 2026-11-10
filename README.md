@@ -33,14 +33,14 @@ PATH lookup applies on every platform. macOS and Windows also probe the standard
 ## Prerequisites
 
 - At least one detected built-in or configured editor executable.
-- DSH `0.1.0-rc.5` or newer. A newer runtime may provide the native Workspace row-menu slot; older compatible clients use the scoped adapter.
+- Harness `>=0.2.2-rc.1 <0.3.0` and Node.js `>=24.9.0`. Upgrade Harness before installing 0.3.0. The Workspace-menu adapter is active only when the host does not declare the native slot.
 
 ## Install
 
 Add the plugin to the Web profile:
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.1.tar.gz
+dsh plugin --profile web add dsh-open-with@0.3.0
 ```
 
 Restart the Web server with `SIGTERM`, wait for it to exit, and refresh the page. Never use `kill -9`; it can interrupt a Session zstd write. Confirm the installed version with:
@@ -89,16 +89,21 @@ The preference changes only after the Host accepts a launch. Failures leave the 
 
 ## Development
 
-The repository expects a sibling DeepSeek Harness checkout at `../dsh` for linked development dependencies.
+Use an isolated Harness checkout at `.sandbox/harness`, pinned to `dsh-v0.2.2-rc.1` (`66491b05e3`, full revision pinned in CI), or select one with `DSH_HARNESS_ROOT`. Build it before running plugin checks; development commands link its public packages without editing that checkout.
 
 ```sh
 pnpm install
 pnpm run check
+pnpm run pack:check
+pnpm exec playwright install chromium
+pnpm run test:browser
 ```
 
 `pnpm run check` runs typecheck, lint, tests, and the production build. Commit `lib/` because file-profile installs do not build the package.
 
 The strict Typert descriptors in `src/contract.ts` are shared by the Host manifest and client Remote contribution. The Host editor registry owns executable discovery and command privacy; the Workspace registry owns id-to-path resolution. The Harness owns the row-menu slot declaration, while the plugin keeps a narrow typed adapter until that declaration reaches the published client package.
+
+The browser check installs a packed plugin into a fresh profile and launches only a synthetic editor process. `DSH_TEST_CLI` selects an independently installed official CLI; `DSH_TEST_PACKAGE=dsh-open-with@0.3.0` validates the published package. See [release validation](docs/validation-0.3.0.md).
 
 See [DESIGN.md](DESIGN.md) for the interaction contract, security boundary, compatibility approach, and verification strategy.
 

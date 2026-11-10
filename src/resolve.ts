@@ -1,6 +1,6 @@
 /** Resolve editor executables across supported host platforms. */
 import { existsSync } from 'node:fs'
-import { delimiter, join, posix, win32 } from 'node:path'
+import { posix, win32 } from 'node:path'
 
 type Exists = (path: string) => boolean
 
@@ -13,11 +13,11 @@ function pathCandidates(
   platform: NodeJS.Platform,
   env: NodeJS.ProcessEnv,
 ): string[] {
-  const separator = platform === 'win32' ? ';' : delimiter
+  const separator = platform === 'win32' ? win32.delimiter : posix.delimiter
   const entries = pathValue(env).split(separator)
     .map(entry => entry.trim().replace(/^"|"$/g, ''))
     .filter(entry => entry !== '')
-  if (platform !== 'win32') return entries.map(entry => join(entry, command))
+  if (platform !== 'win32') return entries.map(entry => posix.join(entry, command))
 
   const hasExtension = win32.extname(command) !== ''
   const extensions = hasExtension

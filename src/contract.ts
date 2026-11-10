@@ -44,7 +44,7 @@ export const OPEN_WITH_INVOCATIONS: readonly InvocationDescriptor[] = [
     result: {
       mode: 'strict',
       typeSymbol: 'dsh-open-with#EditorCatalog',
-      schema: editorCatalogSchema,
+      create: () => editorCatalogSchema,
     },
   },
   {
@@ -58,20 +58,20 @@ export const OPEN_WITH_INVOCATIONS: readonly InvocationDescriptor[] = [
         name: 'workspaceId',
         wire: 'workspaceId',
         source: 'json',
-        codec: { mode: 'strict', typeSymbol: 'dsh-open-with#WorkspaceId', schema: workspaceIdSchema },
+        codec: { mode: 'strict', typeSymbol: 'dsh-open-with#WorkspaceId', create: () => workspaceIdSchema },
       },
       {
         name: 'editorId',
         wire: 'editorId',
         source: 'json',
-        codec: { mode: 'strict', typeSymbol: 'dsh-open-with#EditorId', schema: editorIdSchema },
+        codec: { mode: 'strict', typeSymbol: 'dsh-open-with#EditorId', create: () => editorIdSchema },
       },
     ],
     cancellation: { parameter: 'signal' },
     result: {
       mode: 'strict',
       typeSymbol: 'dsh-open-with#OpenResult',
-      schema: openResultSchema,
+      create: () => openResultSchema,
     },
   },
   {
@@ -84,7 +84,7 @@ export const OPEN_WITH_INVOCATIONS: readonly InvocationDescriptor[] = [
     result: {
       mode: 'strict',
       typeSymbol: 'dsh-open-with#EditorCatalog',
-      schema: editorCatalogSchema,
+      create: () => editorCatalogSchema,
     },
   },
 ]

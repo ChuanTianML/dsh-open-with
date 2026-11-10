@@ -33,14 +33,14 @@
 ## 前置条件
 
 - 至少存在一个可用的内置编辑器或已配置的编辑器可执行文件。
-- DSH `0.1.0-rc.5` 或更高版本。较新的运行时可以提供原生 Workspace 行菜单插槽；较早的兼容客户端使用受限适配器。
+- Harness `>=0.2.2-rc.1 <0.3.0`，Node.js `>=24.9.0`。安装 0.3.0 前请先升级 Harness。只有宿主未声明原生工作区菜单插槽时，才启用菜单适配器。
 
 ## 安装
 
 把插件加入 Web profile：
 
 ```sh
-dsh plugin --profile web add https://github.com/ChuanTianML/dsh-open-with/archive/refs/tags/v0.2.1.tar.gz
+dsh plugin --profile web add dsh-open-with@0.3.0
 ```
 
 使用 `SIGTERM` 重启 Web 服务器，等待它退出后刷新页面。切勿使用 `kill -9`，否则可能中断 Session zstd 写入。使用以下命令确认安装版本：
@@ -89,11 +89,14 @@ dsh plugin --profile web list dsh-open-with --depth 0
 
 ## 开发
 
-仓库使用相邻的 `../dsh` DeepSeek Harness 源码作为开发期链接依赖。
+请在 `.sandbox/harness` 使用隔离的 Harness 源码，固定到 `dsh-v0.2.2-rc.1`（`66491b05e3`，CI 固定完整提交），或通过 `DSH_HARNESS_ROOT` 指定检出路径。先构建 Harness；插件开发命令会链接其公开包，不修改该检出。
 
 ```sh
 pnpm install
 pnpm run check
+pnpm run pack:check
+pnpm exec playwright install chromium
+pnpm run test:browser
 ```
 
 `pnpm run check` 会执行类型检查、lint、测试和生产构建。file profile 安装不会自动构建包，因此需要提交 `lib/`。
@@ -101,6 +104,8 @@ pnpm run check
 `src/contract.ts` 中的严格 Typert 描述符由 Host manifest 和客户端 Remote 贡献共用。Host 编辑器注册表负责可执行文件发现和命令隐私，Workspace 注册表负责从 id 解析路径。行菜单插槽声明由 Harness 持有；该声明进入公开客户端包之前，插件使用一个窄类型适配器。
 
 交互约定、安全边界、兼容方案和验证策略详见 [DESIGN.md](DESIGN.md)。
+
+浏览器验证会将打包插件装入全新配置，只启动合成的编辑器测试进程。`DSH_TEST_CLI` 可指定独立安装的官方 CLI，`DSH_TEST_PACKAGE=dsh-open-with@0.3.0` 用于复验 npm 正式包。详见 [0.3.0 验证记录](docs/validation-0.3.0.md)。
 
 ## License
 

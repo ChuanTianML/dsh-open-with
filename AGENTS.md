@@ -13,8 +13,8 @@ Workspace row menu.
   (`src/client/remote.ts`) — one source pins the endpoint, codecs, and
   result shape.
 - The harness owns the slot declaration; this repo only registers into it.
-  Until the declaration reaches the published package, the client uses a
-  narrow type adapter plus the rc.6 DOM compatibility implementation.
+  When the host does not declare the slot, the client uses a narrow type
+  adapter and scoped DOM compatibility implementation.
 - Browser requests never carry paths, commands, or arguments. The Host owns
   Workspace lookup, editor discovery, availability, and launch plans.
 - Registrations are effects: `ctx.effect` / `ctx.typert.register` /
@@ -23,3 +23,10 @@ Workspace row menu.
   are English. Model-facing text is English.
 - `pnpm run check` = typecheck + lint + test + build before every commit;
   commit `lib/` (file: profile installs run without a build).
+
+## Releases
+
+After npm and GitHub publication, repeat clean-profile browser acceptance
+and verify the Hub package, version, repository, and compatibility. Request
+missing or stale catalog corrections; report synchronization as pending
+until the public catalog confirms it.

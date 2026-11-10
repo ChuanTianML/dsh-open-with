@@ -1,4 +1,4 @@
-import type { GlobalStandardProps, PropsLocale } from '@deepseek-ai/dsh-client-ui-slots';
+import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots';
 import { EditorCatalogController } from './catalog.ts';
 import { type OpenWithKey } from './locales.ts';
 import { EditorPreference } from './preference.ts';
@@ -27,7 +27,7 @@ export interface WorkspaceRowOwnerProps {
     onClose: () => void;
 }
 /** Full native row props without assuming an unpublished SlotMap declaration. */
-export type OpenWithRowProps = WorkspaceRowOwnerProps & GlobalStandardProps & PropsLocale<'open-with'> & OpenWithInjected & {
+export type OpenWithRowProps = WorkspaceRowOwnerProps & PropsLocale<'open-with'> & OpenWithInjected & {
     /** Keep a host-owned hover menu alive while its legacy child portal is active. */
     keepParentOpen?: () => void;
 };

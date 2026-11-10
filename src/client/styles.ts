@@ -160,11 +160,12 @@ const css = `
 }
 `
 
-/** Inject the launcher stylesheet once; a second call is a no-op. */
-export function adoptStyles(): void {
-  if (document.getElementById(STYLE_ID) !== null) return
+/** Install one owned stylesheet and return its disposer; existing styles remain owned by their installer. */
+export function adoptStyles(): () => void {
+  if (document.getElementById(STYLE_ID) !== null) return () => {}
   const style = document.createElement('style')
   style.id = STYLE_ID
   style.textContent = css
   document.head.appendChild(style)
+  return () => { style.remove() }
 }

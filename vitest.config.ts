@@ -1,9 +1,11 @@
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
+import process from 'node:process'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
 import type { Plugin } from 'vite'
 
-const dsh = (relative: string): string => fileURLToPath(new URL(`../dsh/${relative}`, import.meta.url))
+const dsh = (relative: string): string => resolve(process.env.DSH_HARNESS_ROOT ?? fileURLToPath(new URL('.sandbox/harness', import.meta.url)), relative)
 
 const decoratorSyntax = /@(?:Remote|RemoteScope)\b/
 
@@ -49,7 +51,7 @@ export default defineConfig({
     alias: {
       // The published /client bundles are browser module-loader format and
       // crash under Node; tests resolve the same entries to their sources.
-      '@deepseek-ai/dsh-client-runtime/client': dsh('packages/client/runtime/src/client/index.ts'),
+      '@deepseek-ai/dsh-client-ui-renderer/client': dsh('packages/client/ui-renderer/src/client/index.ts'),
     },
   },
   test: {
